@@ -107,7 +107,7 @@ if __name__ == "__main__":
             )
 
             req = urllib.request.Request(url=url)
-            filename = "%s-%s-%s.jpg" % ('{0:04d}'.format(img_no), role["title"], img["imageId"])
+            filename = "{}-{:04d}-{}.jpg".format(role["title"], img_no, img["imageId"])
             img_no = img_no - 1
 
             with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
