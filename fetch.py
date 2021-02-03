@@ -76,9 +76,7 @@ class FamlyClient:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-            description="Fetch kids' images from famly.co"
-            )
+    parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
     parser.add_argument("email", help="Auth email")
     parser.add_argument("password", help="Auth password")
     args = parser.parse_args()
