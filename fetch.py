@@ -91,9 +91,14 @@ if __name__ == "__main__":
 
         print("Fetching %s for %s" % (len(imgs), role["title"]))
 
-        img_no = len(imgs)
+        no_images = len(imgs)
+        img_no = no_images
         for img in imgs:
-            print(" - image", img["imageId"])
+            print(
+                " - image {} ({}/{})".format(
+                    img["imageId"], no_images - img_no + 1, no_images
+                )
+            )
 
             # This is constructed from very few examples - I might be asking it
             # to crop things it should not...
