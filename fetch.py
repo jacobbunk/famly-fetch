@@ -93,11 +93,12 @@ if __name__ == "__main__":
 
         print("Fetching %s for %s" % (len(imgs), role["title"]))
 
+        img_no = len(imgs)
         for img in imgs:
             print(" - image", img["imageId"])
 
             # This is constructed from very few examples - I might be asking it
-            # to crop things things it should not...
+            # to crop things it should not...
             url = "%s/%sx%s/%s" % (
                 img["prefix"],
                 img["height"],
@@ -106,7 +107,8 @@ if __name__ == "__main__":
             )
 
             req = urllib.request.Request(url=url)
-            filename = "%s-%s.jpg" % (role["title"], img["imageId"])
+            filename = "%s-%s-%s.jpg" % (img_no, role["title"], img["imageId"])
+            img_no = img_no - 1
 
             with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
                 if r.status != 200:
