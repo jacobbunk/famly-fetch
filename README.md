@@ -12,3 +12,10 @@ while the program is running, so only run this on a personal computer.
 
 Downloaded images will be stored in the current working directory,
 usually the folder where you run this program from.
+
+It will only download images where you have tagged your child. Images
+will be saved in the order they are listed in Famly, which is usually
+in chronological order, but dates are available.
+
+The images have been stripped for any metadata including EXIF
+information by Famly.
