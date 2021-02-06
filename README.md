@@ -4,7 +4,7 @@ Fetch your (kid's) images from famly.co
 You need python3 installed and then it's as simple as running:
 
 ```
-./fetch-famly <email> <password>
+./fetch.py <email> <password>
 ```
 
 Notice that this will make your password visible in the process list
