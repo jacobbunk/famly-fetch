@@ -19,3 +19,7 @@ in chronological order, but dates unfortunately not easily available.
 
 The images have been stripped for any metadata including EXIF
 information by Famly.
+
+[Hent-billeder-fra-Famly.co.pdf](Hent-billeder-fra-Famly.co.pdf)
+contains instructions in Danish on how to make it work on a computer
+running Windows.
