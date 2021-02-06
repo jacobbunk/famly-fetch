@@ -15,7 +15,7 @@ usually the folder where you run this program from.
 
 It will only download images where you have tagged your child. Images
 will be saved in the order they are listed in Famly, which is usually
-in chronological order, but dates are available.
+in chronological order, but dates unfortunately not easily available.
 
 The images have been stripped for any metadata including EXIF
 information by Famly.
