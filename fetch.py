@@ -89,7 +89,7 @@ if __name__ == "__main__":
             "GET", "/api/v2/images/tagged", request_params={"childId": role["targetId"]}
         )
 
-        print("Fetching %s for %s" % (len(imgs), role["title"]))
+        print("Fetching %s images for %s" % (len(imgs), role["title"]))
 
         no_images = len(imgs)
         img_no = no_images
