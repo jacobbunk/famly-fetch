@@ -23,3 +23,11 @@ information by Famly.
 [Hent-billeder-fra-Famly.co.pdf](Hent-billeder-fra-Famly.co.pdf)
 contains instructions in Danish on how to make it work on a computer
 running Windows.
+
+There is now also a script (contributed by
+[pay64k](https://github.com/pay64k)) to fetch images from messages in
+Famly. That can be run as:
+
+```
+./fetch_from_messages.py <email> <password>
+```
