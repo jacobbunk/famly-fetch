@@ -31,3 +31,20 @@ Famly. That can be run as:
 ```
 ./fetch_from_messages.py <email> <password>
 ```
+
+## Mac users
+
+If you are on a Mac (which apparently comes with Python) the easiest
+way is probably to fire up a Terminal and then run the following
+commands (copy and paste carefully, one at a time):
+
+
+```
+mkdir famly
+cd famly
+wget https://raw.githubusercontent.com/jacobbunk/famly-fetch/main/fetch.py
+python3 ./fetch.py <email> <password>
+```
+
+This should have created a folder called ```famly``` where all your
+images have been downloaded to.
