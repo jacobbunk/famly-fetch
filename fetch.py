@@ -91,14 +91,8 @@ if __name__ == "__main__":
 
         print("Fetching %s images for %s" % (len(imgs), role["title"]))
 
-        no_images = len(imgs)
-        img_no = no_images
-        for img in imgs:
-            print(
-                " - image {} ({}/{})".format(
-                    img["imageId"], no_images - img_no + 1, no_images
-                )
-            )
+        for img_no, img in enumerate(imgs, start=1):
+            print(" - image {} ({}/{})".format(img["imageId"], img_no, len(imgs)))
 
             # This is constructed from very few examples - I might be asking it
             # to crop things it should not...
@@ -110,8 +104,9 @@ if __name__ == "__main__":
             )
 
             req = urllib.request.Request(url=url)
-            filename = "{}-{:04d}-{}.jpg".format(role["title"], img_no, img["imageId"])
-            img_no = img_no - 1
+            filename = "{}-{:06d}-{}.jpg".format(
+                role["title"], int(1e4) - img_no, img["imageId"]
+            )
 
             with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
                 if r.status != 200:
