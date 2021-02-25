@@ -42,7 +42,7 @@ commands (copy and paste carefully, one at a time):
 ```
 mkdir famly
 cd famly
-wget https://raw.githubusercontent.com/jacobbunk/famly-fetch/main/fetch.py
+curl -o fetch.py https://raw.githubusercontent.com/jacobbunk/famly-fetch/main/fetch.py
 python3 ./fetch.py <email> <password>
 ```
 
