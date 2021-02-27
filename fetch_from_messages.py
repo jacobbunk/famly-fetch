@@ -84,9 +84,7 @@ if __name__ == "__main__":
 
     my_info = client.me_me_me()
 
-    conversationsIds = client._auth_request(
-        "GET", "/api/v2/conversations"
-    )
+    conversationsIds = client._auth_request("GET", "/api/v2/conversations")
 
     img_number = 1
 
@@ -106,7 +104,9 @@ if __name__ == "__main__":
                 print("%s" % (url))
                 req = urllib.request.Request(url=url)
 
-                with urllib.request.urlopen(req) as r, open("%i.jpg" % (img_number), "wb") as f:
+                with urllib.request.urlopen(req) as r, open(
+                    "%i.jpg" % (img_number), "wb"
+                ) as f:
                     if r.status != 200:
                         raise "B0rked! %s" % body
                     shutil.copyfileobj(r, f)
