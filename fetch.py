@@ -74,22 +74,13 @@ class FamlyClient:
         """Know about thy self..."""
         return self._auth_request("GET", "/api/me/me/me")
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
-    parser.add_argument("email", help="Auth email")
-    parser.add_argument("password", help="Auth password")
-    args = parser.parse_args()
-    client = FamlyClient(args.email, args.password)
-
-    my_info = client.me_me_me()
-
-    for role in my_info["roles2"]:
+    def download_images_by_child_id(self, child_id, first_name):
+        """Download images by childId"""
         imgs = client._auth_request(
-            "GET", "/api/v2/images/tagged", request_params={"childId": role["targetId"]}
+            "GET", "/api/v2/images/tagged", request_params={"childId": child_id}
         )
 
-        print("Fetching %s images for %s" % (len(imgs), role["title"]))
+        print("Fetching %s images for %s" % (len(imgs), first_name))
 
         for img_no, img in enumerate(imgs, start=1):
             print(" - image {} ({}/{})".format(img["imageId"], img_no, len(imgs)))
@@ -105,10 +96,32 @@ if __name__ == "__main__":
 
             req = urllib.request.Request(url=url)
             filename = "{}-{:06d}-{}.jpg".format(
-                role["title"], int(1e4) - img_no, img["imageId"]
+                first_name, int(1e4) - img_no, img["imageId"]
             )
 
             with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
                 if r.status != 200:
                     raise "B0rked! %s" % body
                 shutil.copyfileobj(r, f)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
+    parser.add_argument("email", help="Auth email")
+    parser.add_argument("password", help="Auth password")
+    args = parser.parse_args()
+    client = FamlyClient(args.email, args.password)
+
+    my_info = client.me_me_me()
+
+    # Current children
+    for role in my_info["roles2"]:
+        client.download_images_by_child_id(role["targetId"], role["title"])
+
+    # Previous children (that's what they call it)
+    for ele in my_info["behaviors"]:
+        if ele["id"] == "ShowPreviousChildren":
+            prev_children = ele["payload"]["children"]
+
+    for child in prev_children:
+        client.download_images_by_child_id(child["childId"], child["name"]["firstName"])
