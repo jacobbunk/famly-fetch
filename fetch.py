@@ -119,6 +119,7 @@ if __name__ == "__main__":
         client.download_images_by_child_id(role["targetId"], role["title"])
 
     # Previous children (that's what they call it)
+    prev_children = []
     for ele in my_info["behaviors"]:
         if ele["id"] == "ShowPreviousChildren":
             prev_children = ele["payload"]["children"]
