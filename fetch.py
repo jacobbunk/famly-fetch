@@ -10,17 +10,22 @@ Auth has two versions:
 """
 
 import argparse
+from datetime import datetime
 import json
+import os
 import shutil
 import time
 import urllib.request
 
+import piexif
+from PIL import Image
 
 class FamlyClient:
     _access_token = None
 
     def __init__(self, email, password):
         self._base = "https://app.famly.co"
+        self._pictures_folder = "pictures"
 
         login_data = self.login(email, password)
         self._access_token = login_data["data"]["me"]["authenticateWithPassword"]["accessToken"]
@@ -112,17 +117,35 @@ class FamlyClient:
                 img["width"],
                 img["key"],
             )
+
             # sleep for 1s to avoid 400 errors
             time.sleep(1)
+
             req = urllib.request.Request(url=url)
-            filename = "{}-{:06d}-{}.jpg".format(
-                first_name, int(1e4) - img_no, img["imageId"]
+
+            captured_date = datetime.fromisoformat(img["createdAt"]).strftime("%d-%m-%Y-%H-%M-%S")
+            captured_date_for_exif = datetime.fromisoformat(img["createdAt"]).strftime("%Y:%m:%d %H:%M:%S")
+
+            filename = os.path.join(self._pictures_folder, "{}-{}.jpg".format(
+                first_name, captured_date)
             )
 
             with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
                 if r.status != 200:
                     raise "B0rked! %s" % body
                 shutil.copyfileobj(r, f)
+
+            # write DateTimeOriginal to the image
+            # Load the image
+            saved_img = Image.open(filename)
+
+            # Prepare the EXIF data
+            exif_dict = {"Exif": {piexif.ExifIFD.DateTimeOriginal: captured_date_for_exif.encode()}}
+            exif_bytes = piexif.dump(exif_dict)
+
+            # Write the EXIF data to the image
+            saved_img.save(filename, exif=exif_bytes)
+
 
 
 if __name__ == "__main__":

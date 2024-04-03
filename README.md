@@ -3,19 +3,18 @@ Fetch your (kid's) images from famly.co
 
 You need python3 installed and then it's as simple as running:
 
+
 ```
+pip install -r requirements.txt
 ./fetch.py <email> <password>
 ```
 
 Notice that this will make your password visible in the process list
 while the program is running, so only run this on a personal computer.
 
-Downloaded images will be stored in the current working directory,
-usually the folder where you run this program from.
+Downloaded images will be stored in the ``pictures`` directory of the the folder where you run this program from.
 
-It will only download images where you have tagged your child. Images
-will be saved in the order they are listed in Famly, which is usually
-in chronological order, but dates unfortunately not easily available.
+It will only download images where you have tagged your child. The date that the photo was taken is embedded in its metadata and in its title.  
 
 The images have been stripped for any metadata including EXIF
 information by Famly.
