@@ -12,9 +12,12 @@ pip install -r requirements.txt
 Notice that this will make your password visible in the process list
 while the program is running, so only run this on a personal computer.
 
-Downloaded images will be stored in the ``pictures`` directory of the the folder where you run this program from.
+Downloaded images will be stored in the ``pictures`` directory of the
+the folder where you run this program from.
 
-It will only download images where you have tagged your child. The date that the photo was taken is embedded in its metadata and in its title.  
+It will only download images where you have tagged your child. The
+date that the photo was taken is embedded in its metadata and in its
+title.
 
 The images have been stripped for any metadata including EXIF
 information by Famly.

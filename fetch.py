@@ -106,8 +106,7 @@ class FamlyClient:
         print("Fetching %s images for %s" % (len(imgs), first_name))
 
         for img_no, img in enumerate(imgs, start=1):
-            print(
-                " - image {} ({}/{})".format(img["imageId"], img_no, len(imgs)))
+            print(" - image {} ({}/{})".format(img["imageId"], img_no, len(imgs)))
 
             # This is constructed from very few examples - I might be asking it
             # to crop things it should not...
@@ -149,8 +148,7 @@ class FamlyClient:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Fetch kids' images from famly.co")
+    parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
     parser.add_argument("email", help="Auth email")
     parser.add_argument("password", help="Auth password")
     args = parser.parse_args()
