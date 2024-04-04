@@ -1,0 +1,99 @@
+mutation Authenticate($email: EmailAddress!, $password: Password!, $deviceId: DeviceId, $legacy: Boolean) {
+    me {
+        authenticateWithPassword(
+            email: $email
+            password: $password
+            deviceId: $deviceId
+            legacy: $legacy
+        ) {
+            ...AuthenticationResult
+            __typename
+        }
+        __typename
+    }
+}
+
+fragment AuthenticationResult on AuthenticationResult {
+    status
+    __typename
+    ... on AuthenticationFailed {
+        status
+        errorDetails
+        errorTitle
+        __typename
+    }
+    ... on AuthenticationSucceeded {
+        accessToken
+        deviceId
+        __typename
+    }
+    ... on AuthenticationChallenged {
+        ...AuthChallenge
+        __typename
+    }
+}
+
+fragment AuthChallenge on AuthenticationChallenged {
+    loginId
+    deviceId
+    expiresAt
+    choices {
+        context {
+            ...UserContextFragment
+            __typename
+        }
+        hmac
+        requiresTwoFactor
+        __typename
+    }
+    person {
+        name {
+            fullName
+            __typename
+        }
+        profileImage {
+            url
+            __typename
+        }
+        __typename
+    }
+    __typename
+}
+
+fragment UserContextFragment on UserContext {
+    id
+    target {
+        __typename
+        ... on PersonContextTarget {
+            person {
+                name {
+                    fullName
+                    __typename
+                }
+                __typename
+            }
+            children {
+                name {
+                    firstName
+                    fullName
+                    __typename
+                }
+                profileImage {
+                    url
+                    __typename
+                }
+                __typename
+            }
+            __typename
+        }
+        ... on InstitutionSet {
+            title
+            profileImage {
+                url
+                __typename
+            }
+            __typename
+        }
+    }
+    __typename
+}
