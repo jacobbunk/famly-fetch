@@ -62,7 +62,7 @@ class FamlyDownloader:
 
             with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
                 if r.status != 200:
-                    raise "B0rked! %s" % body
+                    raise "B0rked! %s" % r.read().decode("utf-8")
                 shutil.copyfileobj(r, f)
 
             # write DateTimeOriginal to the image
