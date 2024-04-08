@@ -27,7 +27,7 @@ class FamlyDownloader:
         self._pictures_folder = "pictures"
         self._apiClient = ApiClient()
         self._apiClient.login(email, password)
-    
+
     def download_images_by_child_id(self, child_id, first_name):
         """Download images by childId"""
         imgs = self._apiClient.make_api_request(
@@ -56,8 +56,8 @@ class FamlyDownloader:
             captured_date = datetime.fromisoformat(img["createdAt"]).strftime("%d-%m-%Y-%H-%M-%S")
             captured_date_for_exif = datetime.fromisoformat(img["createdAt"]).strftime("%Y:%m:%d %H:%M:%S")
 
-            filename = os.path.join(self._pictures_folder, "{}-{}.jpg".format(
-                first_name, captured_date)
+            filename = os.path.join(self._pictures_folder, "{}-{}-{}.jpg".format(
+                first_name, captured_date, img["imageId"])
             )
 
             with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
