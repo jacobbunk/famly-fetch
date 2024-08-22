@@ -1,0 +1,60 @@
+query LearningJourneyQuery($childId: ChildId!, $observationIds: [ObservationId!], $variants: [ObservationVariant!], $next: ObservationCursor, $first: Int!) {
+  childDevelopment {
+    observations(
+      first: $first
+      childIds: [$childId]
+      observationIds: $observationIds
+      statuses: [SENT]
+      variants: $variants
+      after: $next
+    ) {
+      results {
+        ...ObservationDataWithNoComments
+      }
+      next
+    }
+  }
+}
+
+fragment ObservationDataWithNoComments on Observation {
+  children {
+    name
+  }
+    createdBy {
+    name {
+      fullName
+    }
+  }
+  status {
+    createdAt
+  }
+  variant
+  remark {
+    body
+  }
+  images {
+    height
+    width
+    id
+    secret {
+      crop
+      expires
+      key
+      path
+      prefix
+    }
+  }
+  videos {
+    ... on TranscodingVideo {
+      id
+    }
+    ... on TranscodedVideo {
+      duration
+      height
+      id
+      thumbnailUrl
+      videoUrl
+      width
+    }
+  }
+}
