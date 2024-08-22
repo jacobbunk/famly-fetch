@@ -15,11 +15,10 @@ while the program is running, so only run this on a personal computer.
 Downloaded images will be stored in the ``pictures`` directory of the
 the folder where you run this program from.
 
-By default, it will only download images where you have tagged your child (add
-`--no-tagged` to skip). Add `-j` or `--journey` to download images from the
-learning journey. Add `-n` or `--notes` to download images from notes. The
+By default, it will only download images where you have tagged your child. The
 date that the photo was taken is embedded in its metadata and in its title.
-For journey and notes, the associated text is also added as an exif comment.
+For journey, notes and messages, the associated text is also added as an exif
+comment.
 
 The images have been stripped for any metadata including EXIF
 information by Famly.
@@ -28,13 +27,14 @@ information by Famly.
 contains instructions in Danish on how to make it work on a computer
 running Windows.
 
-There is now also a script (contributed by
-[pay64k](https://github.com/pay64k)) to fetch images from messages in
-Famly. That can be run as:
+## Arguments
 
-```
-./fetch_from_messages.py <email> <password>
-```
+| Argument | Description |
+| --- | --- |
+| `--no-tagged` | Don't download tagged images |
+| `--journey` `-j` | Download images from child Learning Journey |
+| `--notes` `-n` | Download images from child notes |
+| `--messages` `-m` | Download images from messages |
 
 ## Mac users
 

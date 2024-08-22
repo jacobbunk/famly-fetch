@@ -86,6 +86,14 @@ class FamlyDownloader:
             img["secret"]["expires"],
         )
 
+    def get_image_url(self, img):
+        return "%s/%sx%s/%s" % (
+            img["prefix"],
+            img["width"],
+            img["height"],
+            img["key"],
+        )
+
     def download_tagged_images(self, child_id, first_name):
         """Download images by childId"""
         imgs = self._apiClient.make_api_request(
@@ -97,19 +105,31 @@ class FamlyDownloader:
         for img_no, img in enumerate(imgs, start=1):
             print(" - image {} ({}/{})".format(img["imageId"], img_no, len(imgs)))
 
-            # This is constructed from very few examples - I might be asking it
-            # to crop things it should not...
-            url = "%s/%sx%s/%s" % (
-                img["prefix"],
-                img["height"],
-                img["width"],
-                img["key"],
-            )
+            url = self.get_image_url(img)
 
             # sleep for 1s to avoid 400 errors
             time.sleep(1)
 
             self.fetch_image(url, img["imageId"], first_name, img["createdAt"])
+
+    def download_images_from_messages(self):
+        conversationsIds = self._apiClient.make_api_request(
+            "GET", "/api/v2/conversations"
+        )
+
+        for conv_id in conversationsIds:
+            conversation = self._apiClient.make_api_request(
+                "GET", "/api/v2/conversations/%s" % (conv_id["conversationId"])
+            )
+
+            for msg in conversation["messages"]:
+                text = msg["body"] + " - " + msg["author"]["title"]
+                date = msg["createdAt"]
+
+                for img in msg["images"]:
+                    url = self.get_image_url(img)
+
+                    self.fetch_image(url, img["imageId"], "message", date, text)
 
     def fetch_image(self, url, id, first_name, date, text=None):
         req = urllib.request.Request(url=url)
@@ -147,6 +167,7 @@ if __name__ == "__main__":
     parser.add_argument("--no-tagged", action='store_true')
     parser.add_argument("-j", "--journey", action='store_true')
     parser.add_argument("-n", "--notes", action='store_true')
+    parser.add_argument("-m", "--messages", action='store_true')
     args = parser.parse_args()
 
     # Create the downloader
@@ -154,6 +175,8 @@ if __name__ == "__main__":
 
     my_info = famly_downloader._apiClient.me_me_me()
 
+    if args.messages:
+        famly_downloader.download_images_from_messages()
 
     # Current children
     for role in my_info["roles2"]:
