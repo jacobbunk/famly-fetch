@@ -17,7 +17,7 @@ import time
 import urllib.request
 
 import piexif
-from PIL import Image
+import piexif.helper
 
 from api_client import ApiClient
 
@@ -28,53 +28,134 @@ class FamlyDownloader:
         self._apiClient = ApiClient()
         self._apiClient.login(email, password)
 
-    def download_images_by_child_id(self, child_id, first_name):
+    def download_images_from_notes(self, child_id, first_name):
+        next = None
+
+        while True:
+            print("Fetching next 100 notes")
+            batch = self._apiClient.get_child_notes(child_id, next=next, first=100)
+            print(f"{len(batch["result"])} fetched.")
+
+            for i, note in enumerate(batch["result"]):
+                text = note["text"] + " - " + note["createdBy"]["name"]["fullName"]
+                date = note["createdAt"]
+
+                for img in note["images"]:
+                    url = self.get_secret_image_url(img)
+
+                    print(f"Fetching image {img["id"]} for note {i}")
+
+                    self.fetch_image(url, img["id"], first_name, date, text)
+
+            next = batch["next"]
+
+            if not next:
+                break
+
+    def download_images_from_learning_journey(self, child_id, first_name):
+        next = None
+
+        while True:
+            print("Fetching next 100 learning journey entries")
+            batch = self._apiClient.learning_journey_query(child_id, next=next, first=100)
+            print(f"{len(batch["results"])} fetched.")
+
+            for i, observation in enumerate(batch["results"]):
+                text = observation["remark"]["body"] + " - " + observation["createdBy"]["name"]["fullName"]
+                date = observation["status"]["createdAt"]
+
+                for img in observation["images"]:
+                    url = self.get_secret_image_url(img)
+
+                    print(f"Fetching image {img["id"]} for observation {i}")
+
+                    self.fetch_image(url, img["id"], first_name, date, text)
+
+            next = batch["next"]
+
+            if not next:
+                break
+
+    def get_secret_image_url(self, img):
+        return "%s/%s/%sx%s/%s?expires=%s" % (
+            img["secret"]["prefix"],
+            img["secret"]["key"],
+            img["width"],
+            img["height"],
+            img["secret"]["path"],
+            img["secret"]["expires"],
+        )
+
+    def get_image_url(self, img):
+        return "%s/%sx%s/%s" % (
+            img["prefix"],
+            img["width"],
+            img["height"],
+            img["key"],
+        )
+
+    def download_tagged_images(self, child_id, first_name):
         """Download images by childId"""
         imgs = self._apiClient.make_api_request(
             "GET", "/api/v2/images/tagged", params={"childId": child_id}
         )
 
-        print("Fetching %s images for %s" % (len(imgs), first_name))
+        print("Fetching %s tagged images for %s" % (len(imgs), first_name))
 
         for img_no, img in enumerate(imgs, start=1):
             print(" - image {} ({}/{})".format(img["imageId"], img_no, len(imgs)))
 
-            # This is constructed from very few examples - I might be asking it
-            # to crop things it should not...
-            url = "%s/%sx%s/%s" % (
-                img["prefix"],
-                img["height"],
-                img["width"],
-                img["key"],
-            )
+            url = self.get_image_url(img)
 
             # sleep for 1s to avoid 400 errors
             time.sleep(1)
 
-            req = urllib.request.Request(url=url)
+            self.fetch_image(url, img["imageId"], first_name, img["createdAt"])
 
-            captured_date = datetime.fromisoformat(img["createdAt"]).strftime("%d-%m-%Y-%H-%M-%S")
-            captured_date_for_exif = datetime.fromisoformat(img["createdAt"]).strftime("%Y:%m:%d %H:%M:%S")
+    def download_images_from_messages(self):
+        conversationsIds = self._apiClient.make_api_request(
+            "GET", "/api/v2/conversations"
+        )
 
-            filename = os.path.join(self._pictures_folder, "{}-{}-{}.jpg".format(
-                first_name, captured_date, img["imageId"])
+        for conv_id in conversationsIds:
+            conversation = self._apiClient.make_api_request(
+                "GET", "/api/v2/conversations/%s" % (conv_id["conversationId"])
             )
 
-            with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
-                if r.status != 200:
-                    raise "B0rked! %s" % r.read().decode("utf-8")
-                shutil.copyfileobj(r, f)
+            for msg in conversation["messages"]:
+                text = msg["body"] + " - " + msg["author"]["title"]
+                date = msg["createdAt"]
 
-            # write DateTimeOriginal to the image
-            # Load the image
-            saved_img = Image.open(filename)
+                for img in msg["images"]:
+                    url = self.get_image_url(img)
 
-            # Prepare the EXIF data
-            exif_dict = {"Exif": {piexif.ExifIFD.DateTimeOriginal: captured_date_for_exif.encode()}}
-            exif_bytes = piexif.dump(exif_dict)
+                    self.fetch_image(url, img["imageId"], "message", date, text)
 
-            # Write the EXIF data to the image
-            saved_img.save(filename, exif=exif_bytes)
+    def fetch_image(self, url, id, first_name, date, text=None):
+        req = urllib.request.Request(url=url)
+
+        captured_date = datetime.fromisoformat(date).strftime("%Y-%m-%d_%H-%M-%S")
+        captured_date_for_exif = datetime.fromisoformat(date).strftime("%Y:%m:%d %H:%M:%S")
+
+        filename = os.path.join(self._pictures_folder, "{}-{}-{}.jpg".format(
+            first_name, captured_date, id)
+        )
+
+        with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
+            if r.status != 200:
+                raise "B0rked! %s" % r.read().decode("utf-8")
+            shutil.copyfileobj(r, f)
+
+        # Prepare the EXIF data
+        exif_dict = {"Exif": {piexif.ExifIFD.DateTimeOriginal: captured_date_for_exif.encode()}}
+
+        if text:
+            exif_dict["Exif"][piexif.ExifIFD.UserComment] = piexif.helper.UserComment.dump(text, encoding="unicode")
+
+        exif_bytes = piexif.dump(exif_dict)
+
+        # Write the EXIF data to the image
+        piexif.insert(exif_bytes, filename)
 
 
 
@@ -83,6 +164,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
     parser.add_argument("email", help="Auth email")
     parser.add_argument("password", help="Auth password")
+    parser.add_argument("--no-tagged", action='store_true')
+    parser.add_argument("-j", "--journey", action='store_true')
+    parser.add_argument("-n", "--notes", action='store_true')
+    parser.add_argument("-m", "--messages", action='store_true')
     args = parser.parse_args()
 
     # Create the downloader
@@ -90,10 +175,17 @@ if __name__ == "__main__":
 
     my_info = famly_downloader._apiClient.me_me_me()
 
+    if args.messages:
+        famly_downloader.download_images_from_messages()
 
     # Current children
     for role in my_info["roles2"]:
-        famly_downloader.download_images_by_child_id(role["targetId"], role["title"])
+        if not args.no_tagged:
+            famly_downloader.download_tagged_images(role["targetId"], role["title"])
+        if args.journey:
+            famly_downloader.download_images_from_learning_journey(role["targetId"], role["title"])
+        if args.notes:
+            famly_downloader.download_images_from_notes(role["targetId"], role["title"])
 
     # Previous children (that's what they call it)
     prev_children = []

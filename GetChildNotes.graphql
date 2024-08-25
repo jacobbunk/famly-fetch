@@ -1,0 +1,43 @@
+query GetChildNotes($childId: ChildId!, $cursor: ChildNoteCursor, $limit: Int!, $parentVisible: Boolean, $safeguardingConcern: Boolean, $sensitive: Boolean, $noteIds: [ChildNoteId!], $noteTypes: [ChildNoteType!], $showDrafts: Boolean, $isAcknowledgedByParent: Boolean) {
+  childNotes(
+    childIds: [$childId]
+    cursor: $cursor
+    limit: $limit
+    parentVisible: $parentVisible
+    safeguardingConcern: $safeguardingConcern
+    sensitive: $sensitive
+    noteIds: $noteIds
+    noteTypes: $noteTypes
+    drafts: $showDrafts
+    isAcknowledgedByParent: $isAcknowledgedByParent
+  ) {
+    next
+    result {
+      ...Note
+    }
+  }
+}
+
+fragment Note on ChildNote {
+  noteType
+  createdBy {
+    name {
+      fullName
+    }
+  }
+  text
+  createdAt
+  publishedAt
+  images {
+    height
+    id
+    secret {
+      crop
+      expires
+      key
+      path
+      prefix
+    }
+    width
+  }
+}

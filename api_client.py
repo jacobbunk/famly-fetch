@@ -19,27 +19,60 @@ class ApiClient:
             Exception: If the server returns a non-200 HTTP status code.
         """
 
-        with open('authenticate_query.graphql', 'r') as file:
+        login_data = self.make_graphql_request("Authenticate", {
+            "email": email,
+            "password": password,
+            "deviceId": "d2900c00-042d-4db2-a329-798fcd2f152e",
+            "legacy": False,
+        })
+
+        self._access_token = login_data["me"]["authenticateWithPassword"]["accessToken"]
+
+    def get_child_notes(self, childId, next=None, first=10):
+        data = self.make_graphql_request("GetChildNotes", {
+            "noteTypes": [
+                "Classic"
+            ],
+            "childId": childId,
+            "parentVisible": True,
+            "safeguardingConcern": False,
+            "sensitive": False,
+            "limit": first,
+            "cursor": next,
+        })
+
+        return data["childNotes"]
+
+    def learning_journey_query(self, childId, next=None, first=10):
+        data = self.make_graphql_request("LearningJourneyQuery", {
+            "childId": childId,
+            "variants": [
+                "REGULAR_OBSERVATION",
+                "PARENT_OBSERVATION",
+            ],
+            "first": first,
+            "next": next,
+        })
+
+        return data["childDevelopment"]["observations"]
+
+    def make_graphql_request(self, method, variables):
+        with open(f"{method}.graphql", 'r') as file:
             query = file.read()
-            
+
         postBody = {
-            "operationName": "Authenticate",
-            "variables": {
-                "email": email,
-                "password": password,
-                "deviceId": "d2900c00-042d-4db2-a329-798fcd2f152e",
-                "legacy": False,
-            },
+            "operationName": method,
+            "variables": variables,
             "query": query
         }
 
-        login_data = self.make_api_request(
+        data = login_data = self.make_api_request(
             "POST",
-            "/graphql?Authenticate",
+            f"/graphql?{method}",
             body=postBody,
         )
 
-        self._access_token = login_data["data"]["me"]["authenticateWithPassword"]["accessToken"]
+        return data["data"]
 
     def make_api_request(self, method, path, body=None, params=None):
         """
