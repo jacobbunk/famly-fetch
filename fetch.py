@@ -164,10 +164,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
     parser.add_argument("email", help="Auth email")
     parser.add_argument("password", help="Auth password")
-    parser.add_argument("--no-tagged", action='store_true')
-    parser.add_argument("-j", "--journey", action='store_true')
-    parser.add_argument("-n", "--notes", action='store_true')
-    parser.add_argument("-m", "--messages", action='store_true')
+    parser.add_argument("--no-tagged", action='store_true', help="Don't download tagged images")
+    parser.add_argument("-j", "--journey", action='store_true', help="Download images from child Learning Journey")
+    parser.add_argument("-n", "--notes", action='store_true', help="Download images from child notes")
+    parser.add_argument("-m", "--messages", action='store_true', help="Download images from messages")
     args = parser.parse_args()
 
     # Create the downloader
@@ -178,14 +178,11 @@ if __name__ == "__main__":
     if args.messages:
         famly_downloader.download_images_from_messages()
 
+    all_children = []
+
     # Current children
     for role in my_info["roles2"]:
-        if not args.no_tagged:
-            famly_downloader.download_tagged_images(role["targetId"], role["title"])
-        if args.journey:
-            famly_downloader.download_images_from_learning_journey(role["targetId"], role["title"])
-        if args.notes:
-            famly_downloader.download_images_from_notes(role["targetId"], role["title"])
+        all_children.append((role["targetId"], role["title"]))
 
     # Previous children (that's what they call it)
     prev_children = []
@@ -194,5 +191,13 @@ if __name__ == "__main__":
             prev_children = ele["payload"]["children"]
 
     for child in prev_children:
-        famly_downloader.download_images_by_child_id(
-            child["childId"], child["name"]["firstName"])
+        all_children.append((child["childId"], child["name"]["firstName"]))
+
+    # Process each child
+    for child_id, first_name in all_children:
+        if not args.no_tagged:
+            famly_downloader.download_tagged_images(child_id, first_name)
+        if args.journey:
+            famly_downloader.download_images_from_learning_journey(child_id, first_name)
+        if args.notes:
+            famly_downloader.download_images_from_notes(child_id, first_name)
