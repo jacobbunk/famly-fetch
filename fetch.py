@@ -164,10 +164,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
     parser.add_argument("email", help="Auth email")
     parser.add_argument("password", help="Auth password")
-    parser.add_argument("--no-tagged", action='store_true')
-    parser.add_argument("-j", "--journey", action='store_true')
-    parser.add_argument("-n", "--notes", action='store_true')
-    parser.add_argument("-m", "--messages", action='store_true')
+    parser.add_argument("--no-tagged", action='store_true', help="Don't download tagged images")
+    parser.add_argument("-j", "--journey", action='store_true', help="Download images from child Learning Journey")
+    parser.add_argument("-n", "--notes", action='store_true', help="Download images from child notes")
+    parser.add_argument("-m", "--messages", action='store_true', help="Download images from messages")
     args = parser.parse_args()
 
     # Create the downloader
