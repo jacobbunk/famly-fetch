@@ -5,7 +5,7 @@ You need python3 installed and then it's as simple as running:
 
 
 ```
-pip install -r requirements.txt
+pip install .
 ./fetch.py <email> <password>
 ```
 
