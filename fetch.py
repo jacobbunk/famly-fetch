@@ -10,21 +10,26 @@ Auth has two versions:
 """
 
 import argparse
-from datetime import datetime
 import os
 import shutil
 import time
 import urllib.request
+from datetime import datetime
+from pathlib import Path
+from urllib.parse import urlparse
 
 import piexif
 import piexif.helper
 
 from api_client import ApiClient
 
+
 class FamlyDownloader:
 
     def __init__(self, email, password):
-        self._pictures_folder = "pictures"
+        self._pictures_folder: Path = Path("pictures")
+        self._pictures_folder.mkdir(parents=True, exist_ok=True)
+
         self._apiClient = ApiClient()
         self._apiClient.login(email, password)
 
@@ -134,18 +139,31 @@ class FamlyDownloader:
     def fetch_image(self, url, id, first_name, date, text=None):
         req = urllib.request.Request(url=url)
 
+        file_ext = os.path.splitext(urlparse(url).path)[1].lower()
+
         captured_date = datetime.fromisoformat(date).strftime("%Y-%m-%d_%H-%M-%S")
         captured_date_for_exif = datetime.fromisoformat(date).strftime("%Y:%m:%d %H:%M:%S")
 
-        filename = os.path.join(self._pictures_folder, "{}-{}-{}.jpg".format(
-            first_name, captured_date, id)
+        filename: Path = Path(
+            self._pictures_folder,
+            "{}-{}-{}{}".format(first_name, captured_date, id, file_ext),
         )
+
+        if filename.exists():
+            print(f"File {filename} already exists, skipping")
+            return
 
         with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
             if r.status != 200:
                 raise "B0rked! %s" % r.read().decode("utf-8")
             shutil.copyfileobj(r, f)
 
+        try:
+            piexif.load(filename)
+        except piexif.InvalidImageDataError:
+            print("Not a JPEG/TIFF or corrupted image, skip exif updating.")
+            return
+        
         # Prepare the EXIF data
         exif_dict = {"Exif": {piexif.ExifIFD.DateTimeOriginal: captured_date_for_exif.encode()}}
 
@@ -159,7 +177,7 @@ class FamlyDownloader:
 
 
 
-if __name__ == "__main__":
+def main():
     # Parse arguments
     parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
     parser.add_argument("email", help="Auth email")
@@ -201,3 +219,7 @@ if __name__ == "__main__":
             famly_downloader.download_images_from_learning_journey(child_id, first_name)
         if args.notes:
             famly_downloader.download_images_from_notes(child_id, first_name)
+
+
+if __name__ == "__main__":
+    main()
