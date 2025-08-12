@@ -19,52 +19,55 @@ class ApiClient:
             Exception: If the server returns a non-200 HTTP status code.
         """
 
-        login_data = self.make_graphql_request("Authenticate", {
-            "email": email,
-            "password": password,
-            "deviceId": "d2900c00-042d-4db2-a329-798fcd2f152e",
-            "legacy": False,
-        })
+        login_data = self.make_graphql_request(
+            "Authenticate",
+            {
+                "email": email,
+                "password": password,
+                "deviceId": "d2900c00-042d-4db2-a329-798fcd2f152e",
+                "legacy": False,
+            },
+        )
 
         self._access_token = login_data["me"]["authenticateWithPassword"]["accessToken"]
 
     def get_child_notes(self, childId, next=None, first=10):
-        data = self.make_graphql_request("GetChildNotes", {
-            "noteTypes": [
-                "Classic"
-            ],
-            "childId": childId,
-            "parentVisible": True,
-            "safeguardingConcern": False,
-            "sensitive": False,
-            "limit": first,
-            "cursor": next,
-        })
+        data = self.make_graphql_request(
+            "GetChildNotes",
+            {
+                "noteTypes": ["Classic"],
+                "childId": childId,
+                "parentVisible": True,
+                "safeguardingConcern": False,
+                "sensitive": False,
+                "limit": first,
+                "cursor": next,
+            },
+        )
 
         return data["childNotes"]
 
     def learning_journey_query(self, childId, next=None, first=10):
-        data = self.make_graphql_request("LearningJourneyQuery", {
-            "childId": childId,
-            "variants": [
-                "REGULAR_OBSERVATION",
-                "PARENT_OBSERVATION",
-            ],
-            "first": first,
-            "next": next,
-        })
+        data = self.make_graphql_request(
+            "LearningJourneyQuery",
+            {
+                "childId": childId,
+                "variants": [
+                    "REGULAR_OBSERVATION",
+                    "PARENT_OBSERVATION",
+                ],
+                "first": first,
+                "next": next,
+            },
+        )
 
         return data["childDevelopment"]["observations"]
 
     def make_graphql_request(self, method, variables):
-        with open(f"{method}.graphql", 'r') as file:
+        with open(f"{method}.graphql", "r") as file:
             query = file.read()
 
-        postBody = {
-            "operationName": method,
-            "variables": variables,
-            "query": query
-        }
+        postBody = {"operationName": method, "variables": variables, "query": query}
 
         data = login_data = self.make_api_request(
             "POST",
@@ -107,8 +110,7 @@ class ApiClient:
             query_string = urllib.parse.urlencode(params)
             url += "?" + query_string
 
-        req = urllib.request.Request(
-            url=url, headers=headers, method=method, data=b)
+        req = urllib.request.Request(url=url, headers=headers, method=method, data=b)
         try:
             with urllib.request.urlopen(req) as f:
                 body = f.read().decode("utf-8")
@@ -121,8 +123,8 @@ class ApiClient:
                     return body
         except urllib.error.HTTPError as e:
             # The server couldn't fulfill the request
-            print('Error code: ', e.code)
-            print('Response body: ', e.read())
+            print("Error code: ", e.code)
+            print("Response body: ", e.read())
 
     def me_me_me(self):
         """
