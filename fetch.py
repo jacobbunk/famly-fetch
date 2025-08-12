@@ -62,11 +62,17 @@ class FamlyDownloader:
 
         while True:
             print("Fetching next 100 learning journey entries")
-            batch = self._apiClient.learning_journey_query(child_id, next=next, first=100)
+            batch = self._apiClient.learning_journey_query(
+                child_id, next=next, first=100
+            )
             print(f"{len(batch["results"])} fetched.")
 
             for i, observation in enumerate(batch["results"]):
-                text = observation["remark"]["body"] + " - " + observation["createdBy"]["name"]["fullName"]
+                text = (
+                    observation["remark"]["body"]
+                    + " - "
+                    + observation["createdBy"]["name"]["fullName"]
+                )
                 date = observation["status"]["createdAt"]
 
                 for img in observation["images"]:
@@ -142,7 +148,9 @@ class FamlyDownloader:
         file_ext = os.path.splitext(urlparse(url).path)[1].lower()
 
         captured_date = datetime.fromisoformat(date).strftime("%Y-%m-%d_%H-%M-%S")
-        captured_date_for_exif = datetime.fromisoformat(date).strftime("%Y:%m:%d %H:%M:%S")
+        captured_date_for_exif = datetime.fromisoformat(date).strftime(
+            "%Y:%m:%d %H:%M:%S"
+        )
 
         filename: Path = Path(
             self._pictures_folder,
@@ -165,10 +173,14 @@ class FamlyDownloader:
             return
         
         # Prepare the EXIF data
-        exif_dict = {"Exif": {piexif.ExifIFD.DateTimeOriginal: captured_date_for_exif.encode()}}
+        exif_dict = {
+            "Exif": {piexif.ExifIFD.DateTimeOriginal: captured_date_for_exif.encode()}
+        }
 
         if text:
-            exif_dict["Exif"][piexif.ExifIFD.UserComment] = piexif.helper.UserComment.dump(text, encoding="unicode")
+            exif_dict["Exif"][piexif.ExifIFD.UserComment] = (
+                piexif.helper.UserComment.dump(text, encoding="unicode")
+            )
 
         exif_bytes = piexif.dump(exif_dict)
 
@@ -176,16 +188,26 @@ class FamlyDownloader:
         piexif.insert(exif_bytes, filename)
 
 
-
 def main():
     # Parse arguments
     parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
     parser.add_argument("email", help="Auth email")
     parser.add_argument("password", help="Auth password")
-    parser.add_argument("--no-tagged", action='store_true', help="Don't download tagged images")
-    parser.add_argument("-j", "--journey", action='store_true', help="Download images from child Learning Journey")
-    parser.add_argument("-n", "--notes", action='store_true', help="Download images from child notes")
-    parser.add_argument("-m", "--messages", action='store_true', help="Download images from messages")
+    parser.add_argument(
+        "--no-tagged", action="store_true", help="Don't download tagged images"
+    )
+    parser.add_argument(
+        "-j",
+        "--journey",
+        action="store_true",
+        help="Download images from child Learning Journey",
+    )
+    parser.add_argument(
+        "-n", "--notes", action="store_true", help="Download images from child notes"
+    )
+    parser.add_argument(
+        "-m", "--messages", action="store_true", help="Download images from messages"
+    )
     args = parser.parse_args()
 
     # Create the downloader

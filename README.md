@@ -1,11 +1,16 @@
 # famly-fetch
 Fetch your (kid's) images from famly.co
 
+**NOTICE: I no longer have access to Famly, so I am merely the steward of this
+code base. If you create PRs with improvements or bugfixes, please make sure
+to test them before submitting them.**
+
+
 You need python3 installed and then it's as simple as running:
 
 
 ```
-pip install -r requirements.txt
+pip install .
 ./fetch.py <email> <password>
 ```
 
