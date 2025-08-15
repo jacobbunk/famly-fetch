@@ -50,7 +50,7 @@ class FamlyDownloader:
 
                     print(f"Fetching image {img['id']} for note {i}")
 
-                    self.fetch_image(url, img['id'], first_name, date, text)
+                    self.fetch_image(url, img["id"], first_name, date, text)
 
             next = batch["next"]
 
@@ -80,7 +80,7 @@ class FamlyDownloader:
 
                     print(f"Fetching image {img['id']} for observation {i}")
 
-                    self.fetch_image(url, img['id'], first_name, date, text)
+                    self.fetch_image(url, img["id"], first_name, date, text)
 
             next = batch["next"]
 
@@ -185,7 +185,7 @@ class FamlyDownloader:
         exif_bytes = piexif.dump(exif_dict)
 
         # Write the EXIF data to the image
-        piexif.insert(exif_bytes, str(filename.resolve())
+        piexif.insert(exif_bytes, str(filename.resolve()))
 
 
 def main():
