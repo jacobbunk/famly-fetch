@@ -167,7 +167,7 @@ class FamlyDownloader:
             shutil.copyfileobj(r, f)
 
         try:
-            piexif.load(filename)
+            piexif.load(str(filename.resolve()))
         except piexif.InvalidImageDataError:
             print("Not a JPEG/TIFF or corrupted image, skip exif updating.")
             return
@@ -185,7 +185,7 @@ class FamlyDownloader:
         exif_bytes = piexif.dump(exif_dict)
 
         # Write the EXIF data to the image
-        piexif.insert(exif_bytes, filename)
+        piexif.insert(exif_bytes, str(filename.resolve())
 
 
 def main():
