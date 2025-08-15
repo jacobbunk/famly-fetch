@@ -39,7 +39,7 @@ class FamlyDownloader:
         while True:
             print("Fetching next 100 notes")
             batch = self._apiClient.get_child_notes(child_id, next=next, first=100)
-            print(f"{len(batch["result"])} fetched.")
+            print(f"{len(batch['result'])} fetched.")
 
             for i, note in enumerate(batch["result"]):
                 text = note["text"] + " - " + note["createdBy"]["name"]["fullName"]
@@ -48,9 +48,9 @@ class FamlyDownloader:
                 for img in note["images"]:
                     url = self.get_secret_image_url(img)
 
-                    print(f"Fetching image {img["id"]} for note {i}")
+                    print(f"Fetching image {img['id']} for note {i}")
 
-                    self.fetch_image(url, img["id"], first_name, date, text)
+                    self.fetch_image(url, img['id'], first_name, date, text)
 
             next = batch["next"]
 
@@ -65,7 +65,7 @@ class FamlyDownloader:
             batch = self._apiClient.learning_journey_query(
                 child_id, next=next, first=100
             )
-            print(f"{len(batch["results"])} fetched.")
+            print(f"{len(batch['results'])} fetched.")
 
             for i, observation in enumerate(batch["results"]):
                 text = (
@@ -78,9 +78,9 @@ class FamlyDownloader:
                 for img in observation["images"]:
                     url = self.get_secret_image_url(img)
 
-                    print(f"Fetching image {img["id"]} for observation {i}")
+                    print(f"Fetching image {img['id']} for observation {i}")
 
-                    self.fetch_image(url, img["id"], first_name, date, text)
+                    self.fetch_image(url, img['id'], first_name, date, text)
 
             next = batch["next"]
 
@@ -188,7 +188,7 @@ class FamlyDownloader:
         piexif.insert(exif_bytes, str(filename.resolve())
 
 
-def cli():
+def main():
     # Parse arguments
     parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
     parser.add_argument("email", help="Auth email")
@@ -244,4 +244,4 @@ def cli():
 
 
 if __name__ == "__main__":
-    cli()
+    main()
