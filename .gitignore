@@ -1,4 +1,4 @@
-pictures/*.jpg
+pictures/
 .DS_Store
 
 # Byte-compiled / optimized / DLL files
