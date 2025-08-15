@@ -188,7 +188,7 @@ class FamlyDownloader:
         piexif.insert(exif_bytes, str(filename.resolve())
 
 
-def main():
+def cli():
     # Parse arguments
     parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
     parser.add_argument("email", help="Auth email")
@@ -244,4 +244,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    cli()
