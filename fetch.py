@@ -9,7 +9,6 @@ Auth has two versions:
 
 """
 
-import argparse
 import os
 import shutil
 import time
@@ -18,6 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+import click
 import piexif
 import piexif.helper
 
@@ -25,9 +25,8 @@ from api_client import ApiClient
 
 
 class FamlyDownloader:
-
-    def __init__(self, email, password):
-        self._pictures_folder: Path = Path("pictures")
+    def __init__(self, email: str, password: str, pictures_folder: Path):
+        self._pictures_folder: Path = pictures_folder
         self._pictures_folder.mkdir(parents=True, exist_ok=True)
 
         self._apiClient = ApiClient()
@@ -167,11 +166,11 @@ class FamlyDownloader:
             shutil.copyfileobj(r, f)
 
         try:
-            piexif.load(filename)
+            piexif.load(str(filename.resolve()))
         except piexif.InvalidImageDataError:
             print("Not a JPEG/TIFF or corrupted image, skip exif updating.")
             return
-        
+
         # Prepare the EXIF data
         exif_dict = {
             "Exif": {piexif.ExifIFD.DateTimeOriginal: captured_date_for_exif.encode()}
@@ -185,37 +184,53 @@ class FamlyDownloader:
         exif_bytes = piexif.dump(exif_dict)
 
         # Write the EXIF data to the image
-        piexif.insert(exif_bytes, filename)
+        piexif.insert(exif_bytes, str(filename.resolve()))
 
 
-def main():
-    # Parse arguments
-    parser = argparse.ArgumentParser(description="Fetch kids' images from famly.co")
-    parser.add_argument("email", help="Auth email")
-    parser.add_argument("password", help="Auth password")
-    parser.add_argument(
-        "--no-tagged", action="store_true", help="Don't download tagged images"
-    )
-    parser.add_argument(
-        "-j",
-        "--journey",
-        action="store_true",
-        help="Download images from child Learning Journey",
-    )
-    parser.add_argument(
-        "-n", "--notes", action="store_true", help="Download images from child notes"
-    )
-    parser.add_argument(
-        "-m", "--messages", action="store_true", help="Download images from messages"
-    )
-    args = parser.parse_args()
+@click.command()
+@click.argument("email", envvar="FAMLY_EMAIL", type=str)
+@click.argument("password", envvar="FAMLY_PASSWORD", type=str)
+@click.option("--no-tagged", is_flag=True, help="Don't download tagged images")
+@click.option(
+    "-j", "--journey", is_flag=True, help="Download images from child Learning Journey"
+)
+@click.option("-n", "--notes", is_flag=True, help="Download images from child notes")
+@click.option("-m", "--messages", is_flag=True, help="Download images from messages")
+@click.option(
+    "-p",
+    "--pictures-folder",
+    envvar="FAMLY_PICTURES_FOLDER",
+    type=click.Path(
+        file_okay=False,
+        dir_okay=True,
+        exists=False,
+        writable=True,
+        resolve_path=True,
+        path_type=Path,
+    ),
+    default="pictures",
+    show_default=True,
+    help="Directory to save downloaded pictures",
+)
+def main(
+    email: str,
+    password: str,
+    no_tagged: bool,
+    journey: bool,
+    notes: bool,
+    messages: bool,
+    pictures_folder: Path,
+):
+    """Fetch kids' images from famly.co
 
-    # Create the downloader
-    famly_downloader = FamlyDownloader(args.email, args.password)
+    EMAIL: Your famly.co email address, can be set via FAMLY_EMAIL env var
 
+    PASSWORD: Your famly.co password, can be set via FAMLY_PASSWORD env var
+    """
+    famly_downloader = FamlyDownloader(email, password, pictures_folder)
     my_info = famly_downloader._apiClient.me_me_me()
 
-    if args.messages:
+    if messages:
         famly_downloader.download_images_from_messages()
 
     all_children = []
@@ -235,11 +250,11 @@ def main():
 
     # Process each child
     for child_id, first_name in all_children:
-        if not args.no_tagged:
+        if not no_tagged:
             famly_downloader.download_tagged_images(child_id, first_name)
-        if args.journey:
+        if journey:
             famly_downloader.download_images_from_learning_journey(child_id, first_name)
-        if args.notes:
+        if notes:
             famly_downloader.download_images_from_notes(child_id, first_name)
 
 
