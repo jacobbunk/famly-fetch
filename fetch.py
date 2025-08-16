@@ -60,14 +60,14 @@ class FamlyDownloader:
         while True:
             click.echo("Fetching next 100 notes")
             batch = self._apiClient.get_child_notes(child_id, next=next_ref, first=100)
-            click.echo(f"{len(batch["result"])} fetched.")
+            click.echo(f"{len(batch['result'])} fetched.")
 
             for _i, note in enumerate(batch["result"]):
                 text = note["text"] + " - " + note["createdBy"]["name"]["fullName"]
                 date = note["createdAt"]
 
                 for img in note["images"]:
-                    click.echo(f" - image {img["id"]} from note at {date}")
+                    click.echo(f" - image {img['id']} from note at {date}")
                     url = self.get_secret_image_url(img)
 
                     self.fetch_image(url, img["id"], f"{first_name}-note", date, text)
@@ -89,7 +89,7 @@ class FamlyDownloader:
             batch = self._apiClient.learning_journey_query(
                 child_id, next=next_ref, first=100
             )
-            click.echo(f"{len(batch["results"])} fetched.")
+            click.echo(f"{len(batch['results'])} fetched.")
 
             for _i, observation in enumerate(batch["results"]):
 
@@ -101,7 +101,7 @@ class FamlyDownloader:
                 date = observation["status"]["createdAt"]
 
                 for img in observation["images"]:
-                    click.echo(f" - image {img["id"]} from observation at {date}")
+                    click.echo(f" - image {img['id']} from observation at {date}")
 
                     url = self.get_secret_image_url(img)
 
@@ -144,7 +144,7 @@ class FamlyDownloader:
 
         for img_no, img in enumerate(imgs, start=1):
             click.echo(
-                f" - image {img["imageId"]} at {img["createdAt"]} ({img_no}/{len(imgs)})"
+                f" - image {img['imageId']} at {img['createdAt']} ({img_no}/{len(imgs)})"
             )
 
             url = self.get_image_url(img)
@@ -172,7 +172,7 @@ class FamlyDownloader:
 
                 for img in msg["images"]:
                     url = self.get_image_url(img)
-                    click.echo(f" - image {img["imageId"]} from message at {date}")
+                    click.echo(f" - image {img['imageId']} from message at {date}")
 
                     self.fetch_image(url, img["imageId"], "message", date, text)
 
