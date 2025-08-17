@@ -7,10 +7,13 @@ ${VENV}/bin/activate:
 venv: ${VENV}/bin/activate
 
 install: pyproject.toml venv
-	${VENV}/bin/pip3 install -e .
+	${VENV}/bin/pip3 install -e .[dev]
 
 format:
-	${VENV}/bin/python -m black .
+	${VENV}/bin/ruff format
+
+ruff-check:
+	${VENV}/bin/ruff check
 
 package:
 	${VENV}/bin/python -m build

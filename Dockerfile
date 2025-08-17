@@ -6,4 +6,4 @@ RUN pip install --no-cache-dir .
 
 COPY . .
 
-ENTRYPOINT [ "python", "./fetch.py" ]
+ENTRYPOINT [ "famly-fetch" ]

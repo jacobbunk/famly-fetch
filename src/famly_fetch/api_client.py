@@ -1,9 +1,10 @@
 import json
 import urllib.request
 
+from importlib_resources import files
+
 
 class ApiClient:
-
     _access_token = None
     _base = "https://app.famly.co"
 
@@ -31,7 +32,7 @@ class ApiClient:
 
         self._access_token = login_data["me"]["authenticateWithPassword"]["accessToken"]
 
-    def get_child_notes(self, childId, next=None, first=10):
+    def get_child_notes(self, childId, cursor=None, first=10):
         data = self.make_graphql_request(
             "GetChildNotes",
             {
@@ -41,13 +42,13 @@ class ApiClient:
                 "safeguardingConcern": False,
                 "sensitive": False,
                 "limit": first,
-                "cursor": next,
+                "cursor": cursor,
             },
         )
 
         return data["childNotes"]
 
-    def learning_journey_query(self, childId, next=None, first=10):
+    def learning_journey_query(self, childId, cursor=None, first=10):
         data = self.make_graphql_request(
             "LearningJourneyQuery",
             {
@@ -57,19 +58,18 @@ class ApiClient:
                     "PARENT_OBSERVATION",
                 ],
                 "first": first,
-                "next": next,
+                "next": cursor,
             },
         )
 
         return data["childDevelopment"]["observations"]
 
     def make_graphql_request(self, method, variables):
-        with open(f"{method}.graphql", "r") as file:
-            query = file.read()
+        query = files("famly_fetch.graphql").joinpath(f"{method}.graphql").read_text()
 
         postBody = {"operationName": method, "variables": variables, "query": query}
 
-        data = login_data = self.make_api_request(
+        data = self.make_api_request(
             "POST",
             f"/graphql?{method}",
             body=postBody,
@@ -115,11 +115,11 @@ class ApiClient:
             with urllib.request.urlopen(req) as f:
                 body = f.read().decode("utf-8")
                 if f.status != 200:
-                    raise "B0rked! %" % body
+                    raise Exception(f"Broken! {body}")
 
                 try:
                     return json.loads(body)
-                except Exception as e:
+                except Exception as _e:
                     return body
         except urllib.error.HTTPError as e:
             # The server couldn't fulfill the request
