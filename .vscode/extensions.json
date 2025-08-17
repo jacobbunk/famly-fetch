@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "charliermarsh.ruff",
+    "ms-python.python",
+    "streetsidesoftware.code-spell-checker"
+  ]
+}
