@@ -32,41 +32,67 @@ class FamlyDownloader:
         self._apiClient = ApiClient()
         self._apiClient.login(email, password)
 
+    def get_all_children(self):
+        my_info = self._apiClient.me_me_me()
+        all_children = []
+
+        # Current children
+        for role in my_info["roles2"]:
+            all_children.append((role["targetId"], role["title"]))
+
+        # Previous children (that's what they call it)
+        prev_children = []
+        for ele in my_info["behaviors"]:
+            if ele["id"] == "ShowPreviousChildren":
+                prev_children = ele["payload"]["children"]
+
+        for child in prev_children:
+            all_children.append((child["childId"], child["name"]["firstName"]))
+
+        return all_children
+
     def download_images_from_notes(self, child_id, first_name):
-        next = None
+        click.secho(
+            f"Downloading learning journey images for {first_name}...", fg="green"
+        )
+        next_ref = None
 
         while True:
-            print("Fetching next 100 notes")
-            batch = self._apiClient.get_child_notes(child_id, next=next, first=100)
-            print(f"{len(batch["result"])} fetched.")
+            click.echo("Fetching next 100 notes")
+            batch = self._apiClient.get_child_notes(child_id, next=next_ref, first=100)
+            click.echo(f"{len(batch['result'])} fetched.")
 
-            for i, note in enumerate(batch["result"]):
+            for _i, note in enumerate(batch["result"]):
                 text = note["text"] + " - " + note["createdBy"]["name"]["fullName"]
                 date = note["createdAt"]
 
                 for img in note["images"]:
+                    click.echo(f" - image {img['id']} from note at {date}")
                     url = self.get_secret_image_url(img)
 
-                    print(f"Fetching image {img["id"]} for note {i}")
+                    self.fetch_image(url, img["id"], f"{first_name}-note", date, text)
 
-                    self.fetch_image(url, img["id"], first_name, date, text)
+            next_ref = batch["next"]
 
-            next = batch["next"]
-
-            if not next:
+            if not next_ref:
                 break
 
     def download_images_from_learning_journey(self, child_id, first_name):
-        next = None
+        click.secho(
+            f"Downloading learning journey images for {first_name}...", fg="green"
+        )
+
+        next_ref = None
 
         while True:
-            print("Fetching next 100 learning journey entries")
+            click.echo("Fetching next 100 learning journey entries")
             batch = self._apiClient.learning_journey_query(
-                child_id, next=next, first=100
+                child_id, next=next_ref, first=100
             )
-            print(f"{len(batch["results"])} fetched.")
+            click.echo(f"{len(batch['results'])} fetched.")
 
-            for i, observation in enumerate(batch["results"]):
+            for _i, observation in enumerate(batch["results"]):
+
                 text = (
                     observation["remark"]["body"]
                     + " - "
@@ -75,15 +101,17 @@ class FamlyDownloader:
                 date = observation["status"]["createdAt"]
 
                 for img in observation["images"]:
+                    click.echo(f" - image {img['id']} from observation at {date}")
+
                     url = self.get_secret_image_url(img)
 
-                    print(f"Fetching image {img["id"]} for observation {i}")
+                    self.fetch_image(
+                        url, img["id"], f"{first_name}-journey", date, text
+                    )
 
-                    self.fetch_image(url, img["id"], first_name, date, text)
+            next_ref = batch["next"]
 
-            next = batch["next"]
-
-            if not next:
+            if not next_ref:
                 break
 
     def get_secret_image_url(self, img):
@@ -106,14 +134,18 @@ class FamlyDownloader:
 
     def download_tagged_images(self, child_id, first_name):
         """Download images by childId"""
+        click.secho(f"Downloading tagged images for {first_name}...", fg="green")
+
         imgs = self._apiClient.make_api_request(
             "GET", "/api/v2/images/tagged", params={"childId": child_id}
         )
 
-        print("Fetching %s tagged images for %s" % (len(imgs), first_name))
+        click.echo(f"Fetching {len(imgs)} tagged images for {first_name}")
 
         for img_no, img in enumerate(imgs, start=1):
-            print(" - image {} ({}/{})".format(img["imageId"], img_no, len(imgs)))
+            click.echo(
+                f" - image {img['imageId']} at {img['createdAt']} ({img_no}/{len(imgs)})"
+            )
 
             url = self.get_image_url(img)
 
@@ -123,11 +155,13 @@ class FamlyDownloader:
             self.fetch_image(url, img["imageId"], first_name, img["createdAt"])
 
     def download_images_from_messages(self):
-        conversationsIds = self._apiClient.make_api_request(
-            "GET", "/api/v2/conversations"
-        )
+        click.secho("Downloading images from messages...", fg="green")
 
-        for conv_id in conversationsIds:
+        conv_ids = self._apiClient.make_api_request("GET", "/api/v2/conversations")
+
+        click.echo(f"Found {len(conv_ids)} conversations")
+
+        for conv_id in conv_ids:
             conversation = self._apiClient.make_api_request(
                 "GET", "/api/v2/conversations/%s" % (conv_id["conversationId"])
             )
@@ -138,10 +172,11 @@ class FamlyDownloader:
 
                 for img in msg["images"]:
                     url = self.get_image_url(img)
+                    click.echo(f" - image {img['imageId']} from message at {date}")
 
                     self.fetch_image(url, img["imageId"], "message", date, text)
 
-    def fetch_image(self, url, id, first_name, date, text=None):
+    def fetch_image(self, url, img_id, filename_prefix, date, text=None):
         req = urllib.request.Request(url=url)
 
         file_ext = os.path.splitext(urlparse(url).path)[1].lower()
@@ -153,11 +188,11 @@ class FamlyDownloader:
 
         filename: Path = Path(
             self._pictures_folder,
-            "{}-{}-{}{}".format(first_name, captured_date, id, file_ext),
+            f"{filename_prefix}-{captured_date}-{img_id}{file_ext}",
         )
 
         if filename.exists():
-            print(f"File {filename} already exists, skipping")
+            click.secho(f"File {filename} already exists, skipping", fg="yellow")
             return
 
         with urllib.request.urlopen(req) as r, open(filename, "wb") as f:
@@ -168,7 +203,9 @@ class FamlyDownloader:
         try:
             piexif.load(str(filename.resolve()))
         except piexif.InvalidImageDataError:
-            print("Not a JPEG/TIFF or corrupted image, skip exif updating.")
+            click.secho(
+                "Not a JPEG/TIFF or corrupted image, skip exif updating.", fg="yellow"
+            )
             return
 
         # Prepare the EXIF data
@@ -228,28 +265,12 @@ def main(
     PASSWORD: Your famly.co password, can be set via FAMLY_PASSWORD env var
     """
     famly_downloader = FamlyDownloader(email, password, pictures_folder)
-    my_info = famly_downloader._apiClient.me_me_me()
 
     if messages:
         famly_downloader.download_images_from_messages()
 
-    all_children = []
-
-    # Current children
-    for role in my_info["roles2"]:
-        all_children.append((role["targetId"], role["title"]))
-
-    # Previous children (that's what they call it)
-    prev_children = []
-    for ele in my_info["behaviors"]:
-        if ele["id"] == "ShowPreviousChildren":
-            prev_children = ele["payload"]["children"]
-
-    for child in prev_children:
-        all_children.append((child["childId"], child["name"]["firstName"]))
-
     # Process each child
-    for child_id, first_name in all_children:
+    for child_id, first_name in famly_downloader.get_all_children():
         if not no_tagged:
             famly_downloader.download_tagged_images(child_id, first_name)
         if journey:
