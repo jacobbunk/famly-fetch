@@ -59,7 +59,9 @@ class FamlyDownloader:
 
         while True:
             click.echo("Fetching next 100 notes")
-            batch = self._apiClient.get_child_notes(child_id, next=next_ref, first=100)
+            batch = self._apiClient.get_child_notes(
+                child_id, cursor=next_ref, first=100
+            )
             click.echo(f"{len(batch['result'])} fetched.")
 
             for _i, note in enumerate(batch["result"]):

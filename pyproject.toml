@@ -19,7 +19,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = ["piexif==1.1.3", "click", "importlib-resources"]
+dependencies = ["piexif==1.1.3", "click", "importlib-resources", "schedule"]
 
 [project.optional-dependencies]
 dev = ["ruff", "build", "twine"]
