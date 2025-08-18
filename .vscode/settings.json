@@ -1,3 +1,8 @@
 {
-  "cSpell.words": ["Famly"]
+  "cSpell.words": ["Famly", "secho", "piexif", "accesstoken"],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "ruff.lint.enable": true,
+  "pylint.enabled": false
 }
