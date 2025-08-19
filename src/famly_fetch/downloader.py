@@ -249,5 +249,3 @@ class FamlyDownloader:
 
         # Write the EXIF data to the image
         piexif.insert(exif_bytes, str(file_path.resolve()))
-        piexif.insert(exif_bytes, str(file_path.resolve()))
-        piexif.insert(exif_bytes, str(file_path.resolve()))
