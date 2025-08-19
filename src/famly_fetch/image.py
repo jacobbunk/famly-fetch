@@ -64,4 +64,3 @@ class SecretImage(BaseImage):
     @property
     def url(self):
         return f"{self.prefix}/{self.key}/{self.width}x{self.height}/{self.path}?expires={self.expires}"
-        return f"{self.prefix}/{self.key}/{self.width}x{self.height}/{self.path}?expires={self.expires}"
