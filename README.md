@@ -73,7 +73,7 @@ If you have Docker set up you can easily run as follows:
 Build the container:
 
 ```bash
-docker build -t famly-fetch -f Dockerfile.dev .
+docker build -t famly-fetch -f dev.Dockerfile .
 docker run -it -v $PWD/pictures:/app/pictures famly-fetch
 ```
 
