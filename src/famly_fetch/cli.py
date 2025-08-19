@@ -29,8 +29,25 @@ class ScheduleTimeParamType(click.ParamType):
 
 
 @click.command()
-@click.argument("email", envvar="FAMLY_EMAIL", type=str)
-@click.argument("password", envvar="FAMLY_PASSWORD", type=str)
+@click.option(
+    "--email",
+    envvar="FAMLY_EMAIL",
+    required=True,
+    prompt="Enter your famly.co email address",
+    help="Your famly.co email address, can be set via FAMLY_EMAIL env var",
+    metavar="EMAIL",
+    type=str,
+)
+@click.option(
+    "--password",
+    envvar="FAMLY_PASSWORD",
+    required=True,
+    prompt="Enter your famly.co password",
+    help="Your famly.co password, can be set via FAMLY_PASSWORD env var",
+    metavar="PASSWORD",
+    hide_input=True,
+    type=str,
+)
 @click.option("--no-tagged", is_flag=True, help="Don't download tagged images")
 @click.option(
     "-j", "--journey", is_flag=True, help="Download images from child Learning Journey"
@@ -51,9 +68,10 @@ class ScheduleTimeParamType(click.ParamType):
     ),
     default="pictures",
     show_default=True,
-    help="Directory to save downloaded pictures",
+    help="Directory to save downloaded pictures, can be set via FAMLY_PICTURES_FOLDER env var",
 )
 @click.option(
+    "-e",
     "--stop-on-existing",
     is_flag=True,
     help="Stop downloading when an already downloaded file is encountered",
@@ -65,8 +83,9 @@ class ScheduleTimeParamType(click.ParamType):
     envvar="FAMLY_SCHEDULE_TIME",
     type=ScheduleTimeParamType(),
     default=None,
-    help="Run the download every day at the specified time (format: HH:MM)",
+    help="Run the download every day at the specified time (format: HH:MM), implies --stop-on-existing. Can be set via FAMLY_SCHEDULE_TIME env var",
 )
+@click.version_option()
 def main(
     email: str,
     password: str,
@@ -78,12 +97,7 @@ def main(
     stop_on_existing: bool,
     schedule_mode: ScheduleTime | None = None,
 ):
-    """Fetch kids' images from famly.co
-
-    EMAIL: Your famly.co email address, can be set via FAMLY_EMAIL env var
-
-    PASSWORD: Your famly.co password, can be set via FAMLY_PASSWORD env var
-    """
+    """Fetch kids' images from famly.co"""
 
     def download():
         try:
@@ -110,6 +124,8 @@ def main(
     if not schedule_mode:
         download()
     else:
+        stop_on_existing = True  # Ensure stop_on_existing is True when scheduling
+
         schedule.every().day.at(
             f"{schedule_mode.hour:02}:{schedule_mode.minute:02}"
         ).do(download)
