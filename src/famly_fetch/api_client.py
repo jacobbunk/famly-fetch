@@ -1,12 +1,39 @@
+import hashlib
 import json
 import urllib.request
+import uuid
 
 from importlib_resources import files
+
+
+def get_device_id() -> str:
+    """
+    Generates a consistent device identifier as an UUID string.
+    This function retrieves the hardware address as a 48-bit positive integer using `uuid.getnode()`,
+    converts it to a hexadecimal string, hashes it using MD5 to ensure privacy and consistency,
+    and then formats the hash as a UUID string.
+    Returns:
+        str: A 128-bit UUID string representing the device identifier.
+    """
+
+    raw_id = hex(uuid.getnode())
+    # Hash + convert to UUID format (ensures consistent 128-bit UUID string)
+    return str(uuid.UUID(hashlib.md5(raw_id.encode()).hexdigest()))
 
 
 class ApiClient:
     _access_token = None
     _base = "https://app.famly.co"
+
+    def __init__(self, user_agent: str | None = None):
+        """
+        Initialize the ApiClient.
+
+        Args:
+            user_agent (str): The user agent to use for requests.
+        """
+        self._user_agent: str | None = user_agent
+        self._device_id = get_device_id()
 
     def login(self, email, password):
         """
@@ -25,7 +52,7 @@ class ApiClient:
             {
                 "email": email,
                 "password": password,
-                "deviceId": "d2900c00-042d-4db2-a329-798fcd2f152e",
+                "deviceId": self._device_id,
                 "legacy": False,
             },
         )
@@ -99,7 +126,10 @@ class ApiClient:
         if body:
             b = json.dumps(body).encode("utf-8")
 
-        headers = {"Content-Type": "application/json"}
+        headers: dict[str, str] = {"Content-Type": "application/json"}
+        if self._user_agent:
+            headers["User-Agent"] = self._user_agent
+
         # If we already have the token, use it
         if self._access_token:
             headers["x-famly-accesstoken"] = self._access_token
