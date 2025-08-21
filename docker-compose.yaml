@@ -6,6 +6,7 @@ services:
       context: .
       dockerfile: dev.Dockerfile
     environment:
+      - TZ=Europe/London # Set your timezone
       - FAMLY_EMAIL=${FAMLY_EMAIL} # default to get value from host environment
       - FAMLY_PASSWORD=${FAMLY_PASSWORD} # default to get value from host environment
       - FAMLY_PICTURES_FOLDER=/app/pictures
