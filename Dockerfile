@@ -1,9 +1,11 @@
 FROM python:3-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir famly-fetch
 
-COPY . .
+VOLUME [ "/pictures" ]
+
+ENV FAMLY_PICTURES_FOLDER=/pictures
 
 ENTRYPOINT [ "famly-fetch" ]
