@@ -29,10 +29,8 @@ class Image(BaseImage):
             width=data["width"],
             height=data["height"],
             key=data["key"],
-            date=datetime.fromisoformat(
-                date_override if date_override is not None else data["createdAt"]
-            ),
-            text=text_override if text_override is not None else data.get("text", None),
+            date=datetime.fromisoformat(date_override or data["createdAt"]),
+            text=text_override or data.get("text", None),
         )
 
     @property
@@ -46,19 +44,19 @@ class SecretImage(BaseImage):
     expires: str
 
     @staticmethod
-    def from_dict(data: dict, date_override: str | None = None):
+    def from_dict(
+        data: dict, date_override: str | None = None, text_override: str | None = None
+    ):
         return SecretImage(
             img_id=data["id"],
             prefix=data["secret"]["prefix"],
             width=data["width"],
             height=data["height"],
             key=data["secret"]["key"],
-            date=datetime.fromisoformat(
-                date_override if date_override is not None else data["createdAt"]
-            ),
+            date=datetime.fromisoformat(date_override or data["createdAt"]),
             path=data["secret"]["path"],
             expires=data["secret"]["expires"],
-            text=data.get("text", None),
+            text=text_override or data.get("text", None),
         )
 
     @property
