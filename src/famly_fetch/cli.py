@@ -1,12 +1,20 @@
 import re
 import time
 from dataclasses import dataclass
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import click
 import schedule
 
 from famly_fetch.downloader import FamlyDownloader
+
+
+def get_version():
+    try:
+        return version("famly-fetch")
+    except PackageNotFoundError:
+        return "unknown"
 
 
 @dataclass
@@ -85,6 +93,16 @@ class ScheduleTimeParamType(click.ParamType):
     default=None,
     help="Run the download every day at the specified time (format: HH:MM), implies --stop-on-existing. Can be set via FAMLY_SCHEDULE_TIME env var",
 )
+@click.option(
+    "-u",
+    "--user-agent",
+    envvar="FAMLY_USER_AGENT",
+    default=f"famly-fetch/{get_version()}",
+    help="User Agent used in Famly requests, can be set via FAMLY_USER_AGENT env var",
+    metavar="",
+    show_default=True,
+    type=str,
+)
 @click.version_option()
 def main(
     email: str,
@@ -95,6 +113,7 @@ def main(
     messages: bool,
     pictures_folder: Path,
     stop_on_existing: bool,
+    user_agent: str,
     schedule_mode: ScheduleTime | None = None,
 ):
     """Fetch kids' images from famly.co"""
@@ -102,7 +121,11 @@ def main(
     def download():
         try:
             famly_downloader = FamlyDownloader(
-                email, password, pictures_folder, stop_on_existing=stop_on_existing
+                email,
+                password,
+                pictures_folder,
+                stop_on_existing,
+                user_agent,
             )
 
             if messages:

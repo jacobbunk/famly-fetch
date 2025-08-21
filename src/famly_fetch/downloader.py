@@ -31,13 +31,14 @@ class FamlyDownloader:
         password: str,
         pictures_folder: Path,
         stop_on_existing: bool,
+        user_agent: str | None = None,
     ):
         self._pictures_folder: Path = pictures_folder
         self._pictures_folder.mkdir(parents=True, exist_ok=True)
 
         self.stop_on_existing = stop_on_existing
 
-        self._apiClient = ApiClient()
+        self._apiClient = ApiClient(user_agent)
         self._apiClient.login(email, password)
 
     def get_all_children(self):
