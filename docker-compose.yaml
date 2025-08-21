@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: dev.Dockerfile
     environment:
       - FAMLY_EMAIL=${FAMLY_EMAIL} # default to get value from host environment
       - FAMLY_PASSWORD=${FAMLY_PASSWORD} # default to get value from host environment
