@@ -58,10 +58,6 @@ Options:
                                   [default: pictures]
   -e, --stop-on-existing          Stop downloading when an already downloaded
                                   file is encountered
-  -s, --schedule SCHEDULE_TIME    Run the download every day at the specified
-                                  time (format: HH:MM), implies --stop-on-
-                                  existing. Can be set via FAMLY_SCHEDULE_TIME
-                                  env var
   --version                       Show the version and exit.
   --help                          Show this message and exit.
 ```
