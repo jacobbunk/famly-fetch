@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
