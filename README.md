@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # famly-fetch
 
 ![Static Badge](https://img.shields.io/badge/Python-3-blue?style=flat&logo=Python)
@@ -9,18 +11,17 @@ Fetch your (kid's) images from famly.co
 code base. If you create PRs with improvements or bugfixes, please make sure
 to test them before submitting them.**
 
-
 ## Get Started
 
 ```
 pip install famly-fetch
-famly-fetch <email> <password>
+famly-fetch
 ```
 
-Notice that this will make your password visible in the process list
-while the program is running, so only run this on a personal computer.
+Enter your email and password when get prompted. Run `famly-fetch --help` to
+get full help page.
 
-Downloaded images will be stored in the ``pictures`` directory of the
+Downloaded images will be stored in the `pictures` directory of the
 the folder where you run this program from.
 
 By default, it will only download images where you have tagged your child. The
@@ -35,26 +36,46 @@ information by Famly.
 contains instructions in Danish on how to make it work on a computer
 running Windows.
 
-## Arguments
+## Command Line Help
 
-| Argument | Description |
-| --- | --- |
-| `--no-tagged` | Don't download tagged images |
-| `--journey` `-j` | Download images from child Learning Journey |
-| `--notes` `-n` | Download images from child notes |
-| `--messages` `-m` | Download images from messages |
+```bash
+Usage: famly-fetch [OPTIONS]
 
+  Fetch kids' images from famly.co
+
+Options:
+  --email EMAIL                   Your famly.co email address, can be set via
+                                  FAMLY_EMAIL env var  [required]
+  --password PASSWORD             Your famly.co password, can be set via
+                                  FAMLY_PASSWORD env var  [required]
+  --no-tagged                     Don't download tagged images
+  -j, --journey                   Download images from child Learning Journey
+  -n, --notes                     Download images from child notes
+  -m, --messages                  Download images from messages
+  -p, --pictures-folder DIRECTORY
+                                  Directory to save downloaded pictures, can
+                                  be set via FAMLY_PICTURES_FOLDER env var
+                                  [default: pictures]
+  -e, --stop-on-existing          Stop downloading when an already downloaded
+                                  file is encountered
+  --version                       Show the version and exit.
+  --help                          Show this message and exit.
+```
 
 ## Docker
 
 If you have Docker set up you can easily run as follows:
 
- Build the container:
-```
-docker build -t famly-fetch .
+Build the container:
+
+```bash
+docker build -t famly-fetch -f dev.Dockerfile .
+docker run -it -v $PWD/pictures:/app/pictures famly-fetch
 ```
 
-Run:
-```
-docker run -v $PWD/pictures:/usr/src/app/pictures famly-fetch <email> <password>
+Or use docker compose workflow
+
+```bash
+docker compose build
+docker compose run app
 ```
