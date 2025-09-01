@@ -18,7 +18,7 @@ pip install famly-fetch
 famly-fetch
 ```
 
-Enter your email and password when get prompted. Run `famly-fetch --help` to
+Enter your email and password when prompted. Run `famly-fetch --help` to
 get full help page.
 
 Downloaded images will be stored in the `pictures` directory of the
@@ -31,6 +31,10 @@ comment.
 
 The images have been stripped for any metadata including EXIF
 information by Famly.
+
+The `--stop-on-existing` option is helpful if you wish to download
+images continously and just want to download what is new since last
+download.
 
 [Hent-billeder-fra-Famly.co.pdf](Hent-billeder-fra-Famly.co.pdf)
 contains instructions in Danish on how to make it work on a computer
@@ -58,10 +62,6 @@ Options:
                                   [default: pictures]
   -e, --stop-on-existing          Stop downloading when an already downloaded
                                   file is encountered
-  -s, --schedule SCHEDULE_TIME    Run the download every day at the specified
-                                  time (format: HH:MM), implies --stop-on-
-                                  existing. Can be set via FAMLY_SCHEDULE_TIME
-                                  env var
   --version                       Show the version and exit.
   --help                          Show this message and exit.
 ```
