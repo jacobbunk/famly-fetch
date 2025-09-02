@@ -1,8 +1,16 @@
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
 import click
 
 from famly_fetch.downloader import FamlyDownloader
+
+
+def get_version():
+    try:
+        return version("famly-fetch")
+    except PackageNotFoundError:
+        return "unknown"
 
 
 @click.command()
@@ -53,6 +61,16 @@ from famly_fetch.downloader import FamlyDownloader
     is_flag=True,
     help="Stop downloading when an already downloaded file is encountered",
 )
+@click.option(
+    "-u",
+    "--user-agent",
+    envvar="FAMLY_USER_AGENT",
+    default=f"famly-fetch/{get_version()}",
+    help="User Agent used in Famly requests, can be set via FAMLY_USER_AGENT env var",
+    metavar="",
+    show_default=True,
+    type=str,
+)
 @click.version_option()
 def main(
     email: str,
@@ -63,12 +81,17 @@ def main(
     messages: bool,
     pictures_folder: Path,
     stop_on_existing: bool,
+    user_agent: str,
 ):
     """Fetch kids' images from famly.co"""
 
     try:
         famly_downloader = FamlyDownloader(
-            email, password, pictures_folder, stop_on_existing=stop_on_existing
+            email,
+            password,
+            pictures_folder,
+            stop_on_existing=stop_on_existing,
+            user_agent=user_agent,
         )
 
         if messages:

@@ -62,6 +62,9 @@ Options:
                                   [default: pictures]
   -e, --stop-on-existing          Stop downloading when an already downloaded
                                   file is encountered
+  -u, --user-agent                User Agent used in Famly requests, can be
+                                  set via FAMLY_USER_AGENT env var  [default:
+                                  famly-fetch/0.2.0]
   --version                       Show the version and exit.
   --help                          Show this message and exit.
 ```
