@@ -103,6 +103,21 @@ def get_version():
     metavar="PATTERN",
     type=str,
 )
+@click.option(
+    "--state-file",
+    envvar="FAMLY_STATE_FILE",
+    type=click.Path(
+        file_okay=True,
+        dir_okay=False,
+        writable=True,
+        resolve_path=True,
+        path_type=Path,
+    ),
+    default=None,
+    show_default="<pictures-folder>/state.json",
+    help="Path to state file for tracking downloaded images, can be set via FAMLY_STATE_FILE env var",
+    metavar="FILE",
+)
 @click.version_option()
 def main(
     email: str,
@@ -119,8 +134,12 @@ def main(
     longitude: float,
     text_comments: bool,
     filename_pattern: str,
+    state_file: Path,
 ):
     """Fetch kids' images from famly.co"""
+
+    if state_file is None:
+        state_file = pictures_folder / "state.json"
 
     # Validate authentication parameters
     if not access_token and (not email or not password):
@@ -143,11 +162,12 @@ def main(
             password=password,
             pictures_folder=pictures_folder,
             stop_on_existing=stop_on_existing,
+            text_comments=text_comments,
+            state_file=state_file,
             user_agent=user_agent,
             access_token=access_token,
             latitude=latitude,
             longitude=longitude,
-            text_comments=text_comments,
             filename_pattern=filename_pattern,
         )
 
