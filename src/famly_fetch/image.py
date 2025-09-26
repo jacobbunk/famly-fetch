@@ -35,7 +35,7 @@ class Image(BaseImage):
 
     @property
     def url(self):
-        return f"{self.prefix}/{self.width}x{self.height}/{self.key}"
+        return f"{self.prefix}/{self.key}"
 
 
 @dataclass
@@ -61,4 +61,4 @@ class SecretImage(BaseImage):
 
     @property
     def url(self):
-        return f"{self.prefix}/{self.key}/{self.width}x{self.height}/{self.path}?expires={self.expires}"
+        return f"{self.prefix}/{self.key}/{self.path}?expires={self.expires}"
