@@ -74,6 +74,20 @@ def get_version():
     show_default=True,
     type=str,
 )
+@click.option(
+    "--latitude",
+    envvar="LATITUDE",
+    type=float,
+    help="Latitude for EXIF GPS data, can be set via LATITUDE env var",
+    metavar="LAT",
+)
+@click.option(
+    "--longitude",
+    envvar="LONGITUDE",
+    type=float,
+    help="Longitude for EXIF GPS data, can be set via LONGITUDE env var",
+    metavar="LONG",
+)
 @click.version_option()
 def main(
     email: str,
@@ -86,6 +100,8 @@ def main(
     pictures_folder: Path,
     stop_on_existing: bool,
     user_agent: str,
+    latitude: float,
+    longitude: float,
 ):
     """Fetch kids' images from famly.co"""
 
@@ -94,10 +110,15 @@ def main(
         if not email:
             email = click.prompt("Enter your famly.co email address", type=str)
         if not password:
-            password = click.prompt("Enter your famly.co password", hide_input=True, type=str)
+            password = click.prompt(
+                "Enter your famly.co password", hide_input=True, type=str
+            )
 
     if access_token and (email or password):
-        click.secho("Warning: Both access token and email/password provided. Using access token.", fg="yellow")
+        click.secho(
+            "Warning: Both access token and email/password provided. Using access token.",
+            fg="yellow",
+        )
 
     try:
         famly_downloader = FamlyDownloader(
@@ -107,6 +128,8 @@ def main(
             stop_on_existing=stop_on_existing,
             user_agent=user_agent,
             access_token=access_token,
+            latitude=latitude,
+            longitude=longitude,
         )
 
         if messages:

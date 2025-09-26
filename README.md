@@ -30,7 +30,8 @@ For journey, notes and messages, the associated text is also added as an exif
 comment.
 
 The images have been stripped for any metadata including EXIF
-information by Famly.
+information by Famly. You can optionally add GPS coordinates to the EXIF
+data of all downloaded images by providing latitude and longitude values.
 
 The `--stop-on-existing` option is helpful if you wish to download
 images continously and just want to download what is new since last
@@ -67,6 +68,10 @@ Options:
   -u, --user-agent                User Agent used in Famly requests, can be
                                   set via FAMLY_USER_AGENT env var  [default:
                                   famly-fetch/0.2.0]
+  --latitude LAT                  Latitude for EXIF GPS data, can be set via
+                                  LATITUDE env var
+  --longitude LONG                Longitude for EXIF GPS data, can be set via
+                                  LONGITUDE env var
   --version                       Show the version and exit.
   --help                          Show this message and exit.
 ```
