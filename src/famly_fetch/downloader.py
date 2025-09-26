@@ -9,10 +9,12 @@ Auth has two versions:
 
 """
 
+import json
 import os
 import shutil
 import time
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -37,9 +39,24 @@ class FamlyDownloader:
         self._pictures_folder.mkdir(parents=True, exist_ok=True)
 
         self.stop_on_existing = stop_on_existing
+        self.state_file = self._pictures_folder / "state.json"
+        self.downloaded_images = self.load_state()
 
         self._apiClient = ApiClient(user_agent)
         self._apiClient.login(email, password)
+
+    def load_state(self):
+        if self.state_file.exists():
+            with open(self.state_file, 'r') as f:
+                return json.load(f)
+        return {}
+
+    def save_state(self):
+        with open(self.state_file, 'w') as f:
+            json.dump(self.downloaded_images, f)
+
+    def mark_as_downloaded(self, img_id: str):
+        self.downloaded_images[img_id] = datetime.now(timezone.utc).isoformat()
 
     def get_all_children(self):
         my_info = self._apiClient.me_me_me()
@@ -84,9 +101,9 @@ class FamlyDownloader:
                     click.echo(f" - image {img.img_id} from note at {img.date}")
 
                     file_path = self.download_file_path(img, f"{first_name}-note")
-                    if file_path.is_file and file_path.exists():
+                    if img.img_id in self.downloaded_images:
                         click.secho(
-                            f"File {file_path} already exists, {'stopping download' if self.stop_on_existing else 'skipping'}.",
+                            f"Image {img.img_id} already downloaded, {'stopping download' if self.stop_on_existing else 'skipping'}.",
                             fg="yellow",
                         )
                         if self.stop_on_existing:
@@ -94,11 +111,14 @@ class FamlyDownloader:
                         else:
                             continue
                     self.fetch_image(img, file_path)
+                    self.mark_as_downloaded(img.img_id)
 
             next_ref = batch["next"]
 
             if not next_ref:
                 break
+
+        self.save_state()
 
     def download_images_from_learning_journey(self, child_id, first_name):
         click.secho(
@@ -129,9 +149,9 @@ class FamlyDownloader:
                     click.echo(f" - image {img.img_id} from observation at {img.date}")
 
                     file_path = self.download_file_path(img, f"{first_name}-journey")
-                    if file_path.is_file and file_path.exists():
+                    if img.img_id in self.downloaded_images:
                         click.secho(
-                            f"File {file_path} already exists, {'stopping download' if self.stop_on_existing else 'skipping'}.",
+                            f"Image {img.img_id} already downloaded, {'stopping download' if self.stop_on_existing else 'skipping'}.",
                             fg="yellow",
                         )
                         if self.stop_on_existing:
@@ -139,11 +159,14 @@ class FamlyDownloader:
                         else:
                             continue
                     self.fetch_image(img, file_path)
+                    self.mark_as_downloaded(img.img_id)
 
             next_cursor = batch["next"]
 
             if not next_cursor:
                 break
+
+        self.save_state()
 
     def download_tagged_images(self, child_id, first_name):
         """Download images by childId"""
@@ -160,9 +183,9 @@ class FamlyDownloader:
             click.echo(f" - image {img.img_id} at {img.date} ({img_no}/{len(imgs)})")
 
             file_path = self.download_file_path(img, first_name)
-            if file_path.is_file and file_path.exists():
+            if img.img_id in self.downloaded_images:
                 click.secho(
-                    f"File {file_path} already exists, {'stopping download' if self.stop_on_existing else 'skipping'}.",
+                    f"Image {img.img_id} already downloaded, {'stopping download' if self.stop_on_existing else 'skipping'}.",
                     fg="yellow",
                 )
                 if self.stop_on_existing:
@@ -173,6 +196,9 @@ class FamlyDownloader:
             # sleep for 1s to avoid 400 errors
             time.sleep(1)
             self.fetch_image(img, file_path)
+            self.mark_as_downloaded(img.img_id)
+
+        self.save_state()
 
     def download_images_from_messages(self):
         click.secho("Downloading images from messages...", fg="green")
@@ -197,9 +223,9 @@ class FamlyDownloader:
 
                     file_path = self.download_file_path(img, "message")
 
-                    if file_path.is_file and file_path.exists():
+                    if img.img_id in self.downloaded_images:
                         click.secho(
-                            f"File {file_path} already exists, {'stopping download' if self.stop_on_existing else 'skipping'}.",
+                            f"Image {img.img_id} already downloaded, {'stopping download' if self.stop_on_existing else 'skipping'}.",
                             fg="yellow",
                         )
                         if self.stop_on_existing:
@@ -207,6 +233,9 @@ class FamlyDownloader:
                         else:
                             continue
                     self.fetch_image(img, file_path)
+                    self.mark_as_downloaded(img.img_id)
+
+        self.save_state()
 
     def download_file_path(self, img: BaseImage, filename_prefix: str) -> Path:
         """Generate the file path for the downloaded image."""
