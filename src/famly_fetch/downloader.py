@@ -32,11 +32,13 @@ class FamlyDownloader:
         pictures_folder: Path,
         stop_on_existing: bool,
         user_agent: str | None = None,
+        no_text_comments: bool = False,
     ):
         self._pictures_folder: Path = pictures_folder
         self._pictures_folder.mkdir(parents=True, exist_ok=True)
 
         self.stop_on_existing = stop_on_existing
+        self.no_text_comments = no_text_comments
 
         self._apiClient = ApiClient(user_agent)
         self._apiClient.login(email, password)
@@ -79,7 +81,7 @@ class FamlyDownloader:
 
                 for img_dict in note["images"]:
                     img = SecretImage.from_dict(
-                        img_dict, date_override=date, text_override=text
+                        img_dict, date_override=date, text_override=None if self.no_text_comments else text
                     )
                     click.echo(f" - image {img.img_id} from note at {img.date}")
 
@@ -124,7 +126,7 @@ class FamlyDownloader:
 
                 for img_dict in observation["images"]:
                     img = SecretImage.from_dict(
-                        img_dict, date_override=date, text_override=text
+                        img_dict, date_override=date, text_override=None if self.no_text_comments else text
                     )
                     click.echo(f" - image {img.img_id} from observation at {img.date}")
 
@@ -190,7 +192,7 @@ class FamlyDownloader:
 
                 for img_dict in msg["images"]:
                     img = Image.from_dict(
-                        img_dict, date_override=date, text_override=text
+                        img_dict, date_override=date, text_override=None if self.no_text_comments else text
                     )
 
                     click.echo(f" - image {img.img_id} from message at {img.date}")

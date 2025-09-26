@@ -71,6 +71,11 @@ def get_version():
     show_default=True,
     type=str,
 )
+@click.option(
+    "--no-text-comments",
+    is_flag=True,
+    help="Don't add observation and message body text to image EXIF UserComment field",
+)
 @click.version_option()
 def main(
     email: str,
@@ -82,6 +87,7 @@ def main(
     pictures_folder: Path,
     stop_on_existing: bool,
     user_agent: str,
+    no_text_comments: bool,
 ):
     """Fetch kids' images from famly.co"""
 
@@ -92,6 +98,7 @@ def main(
             pictures_folder,
             stop_on_existing=stop_on_existing,
             user_agent=user_agent,
+            no_text_comments=no_text_comments,
         )
 
         if messages:
