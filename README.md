@@ -18,7 +18,7 @@ pip install famly-fetch
 famly-fetch
 ```
 
-Enter your email and password when prompted. Run `famly-fetch --help` to
+Enter your email and password when prompted, or provide an access token for authentication. Run `famly-fetch --help` to
 get full help page.
 
 Downloaded images will be stored in the `pictures` directory of the
@@ -49,9 +49,11 @@ Usage: famly-fetch [OPTIONS]
 
 Options:
   --email EMAIL                   Your famly.co email address, can be set via
-                                  FAMLY_EMAIL env var  [required]
+                                  FAMLY_EMAIL env var
   --password PASSWORD             Your famly.co password, can be set via
-                                  FAMLY_PASSWORD env var  [required]
+                                  FAMLY_PASSWORD env var
+  --access-token TOKEN            Your famly.co access token, can be set via
+                                  FAMLY_ACCESS_TOKEN env var
   --no-tagged                     Don't download tagged images
   -j, --journey                   Download images from child Learning Journey
   -n, --notes                     Download images from child notes
