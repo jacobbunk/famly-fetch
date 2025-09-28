@@ -32,14 +32,16 @@ class FamlyDownloader:
         pictures_folder: Path,
         stop_on_existing: bool,
         user_agent: str | None = None,
+        access_token: str | None = None,
     ):
         self._pictures_folder: Path = pictures_folder
         self._pictures_folder.mkdir(parents=True, exist_ok=True)
 
         self.stop_on_existing = stop_on_existing
 
-        self._apiClient = ApiClient(user_agent)
-        self._apiClient.login(email, password)
+        self._apiClient = ApiClient(user_agent=user_agent, access_token=access_token)
+        if not access_token:
+            self._apiClient.login(email, password)
 
     def get_all_children(self):
         my_info = self._apiClient.me_me_me()

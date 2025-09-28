@@ -17,8 +17,6 @@ def get_version():
 @click.option(
     "--email",
     envvar="FAMLY_EMAIL",
-    required=True,
-    prompt="Enter your famly.co email address",
     help="Your famly.co email address, can be set via FAMLY_EMAIL env var",
     metavar="EMAIL",
     type=str,
@@ -26,11 +24,16 @@ def get_version():
 @click.option(
     "--password",
     envvar="FAMLY_PASSWORD",
-    required=True,
-    prompt="Enter your famly.co password",
     help="Your famly.co password, can be set via FAMLY_PASSWORD env var",
     metavar="PASSWORD",
     hide_input=True,
+    type=str,
+)
+@click.option(
+    "--access-token",
+    envvar="FAMLY_ACCESS_TOKEN",
+    help="Your famly.co access token, can be set via FAMLY_ACCESS_TOKEN env var",
+    metavar="TOKEN",
     type=str,
 )
 @click.option("--no-tagged", is_flag=True, help="Don't download tagged images")
@@ -75,6 +78,7 @@ def get_version():
 def main(
     email: str,
     password: str,
+    access_token: str,
     no_tagged: bool,
     journey: bool,
     notes: bool,
@@ -85,13 +89,24 @@ def main(
 ):
     """Fetch kids' images from famly.co"""
 
+    # Validate authentication parameters
+    if not access_token and (not email or not password):
+        if not email:
+            email = click.prompt("Enter your famly.co email address", type=str)
+        if not password:
+            password = click.prompt("Enter your famly.co password", hide_input=True, type=str)
+
+    if access_token and (email or password):
+        click.secho("Warning: Both access token and email/password provided. Using access token.", fg="yellow")
+
     try:
         famly_downloader = FamlyDownloader(
-            email,
-            password,
-            pictures_folder,
+            email=email,
+            password=password,
+            pictures_folder=pictures_folder,
             stop_on_existing=stop_on_existing,
             user_agent=user_agent,
+            access_token=access_token,
         )
 
         if messages:

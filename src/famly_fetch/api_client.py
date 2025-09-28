@@ -1,5 +1,6 @@
 import hashlib
 import json
+import urllib.parse
 import urllib.request
 import uuid
 
@@ -25,15 +26,17 @@ class ApiClient:
     _access_token = None
     _base = "https://app.famly.co"
 
-    def __init__(self, user_agent: str | None = None):
+    def __init__(self, user_agent: str | None = None, access_token: str | None = None):
         """
         Initialize the ApiClient.
 
         Args:
             user_agent (str): The user agent to use for requests.
+            access_token (str): Optional access token to use directly.
         """
         self._user_agent: str | None = user_agent
         self._device_id = get_device_id()
+        self._access_token = access_token
 
     def login(self, email, password):
         """
