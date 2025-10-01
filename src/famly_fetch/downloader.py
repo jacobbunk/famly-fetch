@@ -33,11 +33,15 @@ class FamlyDownloader:
         stop_on_existing: bool,
         user_agent: str | None = None,
         access_token: str | None = None,
+        latitude: float | None = None,
+        longitude: float | None = None,
     ):
         self._pictures_folder: Path = pictures_folder
         self._pictures_folder.mkdir(parents=True, exist_ok=True)
 
         self.stop_on_existing = stop_on_existing
+        self.latitude = latitude
+        self.longitude = longitude
 
         self._apiClient = ApiClient(user_agent=user_agent, access_token=access_token)
         if not access_token:
@@ -247,6 +251,50 @@ class FamlyDownloader:
             exif_dict["Exif"][piexif.ExifIFD.UserComment] = (
                 piexif.helper.UserComment.dump(img.text, encoding="unicode")
             )
+
+        # Add GPS data if latitude and longitude are provided
+        if self.latitude is not None and self.longitude is not None:
+            from fractions import Fraction
+
+            def to_deg(value, loc):
+                if value < 0:
+                    loc_value = loc[0]
+                elif value > 0:
+                    loc_value = loc[1]
+                else:
+                    loc_value = ""
+                abs_value = abs(value)
+                deg = int(abs_value)
+                t1 = (abs_value - deg) * 60
+                min_val = int(t1)
+                sec = round((t1 - min_val) * 60, 2)
+                return deg, min_val, sec, loc_value
+
+            def to_rational(number):
+                f = Fraction(number).limit_denominator(10000)
+                return (f.numerator, f.denominator)
+
+            lat_deg = to_deg(self.latitude, ["S", "N"])
+            lng_deg = to_deg(self.longitude, ["W", "E"])
+
+            exiv_lat = (
+                to_rational(lat_deg[0]),
+                to_rational(lat_deg[1]),
+                to_rational(lat_deg[2]),
+            )
+            exiv_lng = (
+                to_rational(lng_deg[0]),
+                to_rational(lng_deg[1]),
+                to_rational(lng_deg[2]),
+            )
+
+            exif_dict["GPS"] = {  # type: ignore[assignment]
+                piexif.GPSIFD.GPSVersionID: (2, 0, 0, 0),
+                piexif.GPSIFD.GPSLatitudeRef: lat_deg[3].encode(),
+                piexif.GPSIFD.GPSLatitude: exiv_lat,
+                piexif.GPSIFD.GPSLongitudeRef: lng_deg[3].encode(),
+                piexif.GPSIFD.GPSLongitude: exiv_lng,
+            }
 
         exif_bytes = piexif.dump(exif_dict)
 
