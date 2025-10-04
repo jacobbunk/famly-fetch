@@ -229,6 +229,14 @@ class FamlyDownloader:
 
         captured_date_for_exif = img.date.strftime("%Y:%m:%d %H:%M:%S")
 
+        if img.date.tzinfo is not None:
+            timezone_offset = img.date.strftime("%z")
+            # Convert from +0200 to +02:00 format
+            if len(timezone_offset) == 5:
+                timezone_offset = timezone_offset[:3] + ":" + timezone_offset[3:]
+        else:
+            timezone_offset = None
+
         with urllib.request.urlopen(req) as r, open(file_path, "wb") as f:
             if r.status != 200:
                 raise Exception(f"Broken! {r.read().decode('utf-8')}")
@@ -246,6 +254,11 @@ class FamlyDownloader:
         exif_dict = {
             "Exif": {piexif.ExifIFD.DateTimeOriginal: captured_date_for_exif.encode()}
         }
+
+        if timezone_offset:
+            exif_dict["Exif"][piexif.ExifIFD.OffsetTimeOriginal] = (
+                timezone_offset.encode()
+            )
 
         if img.text:
             exif_dict["Exif"][piexif.ExifIFD.UserComment] = (
