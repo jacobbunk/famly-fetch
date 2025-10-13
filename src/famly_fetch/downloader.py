@@ -36,6 +36,7 @@ class FamlyDownloader:
         access_token: str | None = None,
         latitude: float | None = None,
         longitude: float | None = None,
+        filename_pattern: str = "%FP-%Y-%m-%d_%H-%M-%S-%ID",
     ):
         self._pictures_folder: Path = pictures_folder
         self._pictures_folder.mkdir(parents=True, exist_ok=True)
@@ -44,6 +45,7 @@ class FamlyDownloader:
         self.latitude = latitude
         self.longitude = longitude
         self.text_comments = text_comments
+        self.filename_pattern = filename_pattern
 
         self._apiClient = ApiClient(user_agent=user_agent, access_token=access_token)
         if not access_token:
@@ -226,11 +228,16 @@ class FamlyDownloader:
         """Generate the file path for the downloaded image."""
 
         file_ext = os.path.splitext(urlparse(img.url).path)[1].lower()
-        captured_date = img.date.strftime("%Y-%m-%d_%H-%M-%S")
-        return Path(
-            self._pictures_folder,
-            f"{filename_prefix}-{captured_date}-{img.img_id}{file_ext}",
-        )
+
+        # Replace custom patterns first (to avoid collisions with strftime patterns)
+        filename = self.filename_pattern
+        filename = filename.replace("%FP", filename_prefix)
+        filename = filename.replace("%ID", img.img_id)
+
+        filename = img.date.strftime(filename)
+        filename = filename + file_ext
+
+        return Path(self._pictures_folder, filename)
 
     def fetch_image(self, img: BaseImage, file_path: Path):
         req = urllib.request.Request(url=img.url)

@@ -94,6 +94,15 @@ def get_version():
     default=True,
     help="Add observation and message body text to image EXIF UserComment field",
 )
+@click.option(
+    "--filename-pattern",
+    envvar="FAMLY_FILENAME_PATTERN",
+    default="%FP-%Y-%m-%d_%H-%M-%S-%ID",
+    show_default=True,
+    help="Filename pattern. Custom patterns: %FP (prefix), %ID (image ID). Supports strftime formats (e.g., %Y, %m, %d). File extension is automatically appended. Can be set via FAMLY_FILENAME_PATTERN env var",
+    metavar="PATTERN",
+    type=str,
+)
 @click.version_option()
 def main(
     email: str,
@@ -109,6 +118,7 @@ def main(
     latitude: float,
     longitude: float,
     text_comments: bool,
+    filename_pattern: str,
 ):
     """Fetch kids' images from famly.co"""
 
@@ -138,6 +148,7 @@ def main(
             latitude=latitude,
             longitude=longitude,
             text_comments=text_comments,
+            filename_pattern=filename_pattern,
         )
 
         if messages:
