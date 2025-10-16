@@ -31,6 +31,7 @@ class FamlyDownloader:
         password: str,
         pictures_folder: Path,
         stop_on_existing: bool,
+        text_comments: bool,
         user_agent: str | None = None,
         access_token: str | None = None,
         latitude: float | None = None,
@@ -42,6 +43,7 @@ class FamlyDownloader:
         self.stop_on_existing = stop_on_existing
         self.latitude = latitude
         self.longitude = longitude
+        self.text_comments = text_comments
 
         self._apiClient = ApiClient(user_agent=user_agent, access_token=access_token)
         if not access_token:
@@ -85,7 +87,9 @@ class FamlyDownloader:
 
                 for img_dict in note["images"]:
                     img = SecretImage.from_dict(
-                        img_dict, date_override=date, text_override=text
+                        img_dict,
+                        date_override=date,
+                        text_override=text if self.text_comments else None,
                     )
                     click.echo(f" - image {img.img_id} from note at {img.date}")
 
@@ -130,7 +134,9 @@ class FamlyDownloader:
 
                 for img_dict in observation["images"]:
                     img = SecretImage.from_dict(
-                        img_dict, date_override=date, text_override=text
+                        img_dict,
+                        date_override=date,
+                        text_override=text if self.text_comments else None,
                     )
                     click.echo(f" - image {img.img_id} from observation at {img.date}")
 
@@ -196,7 +202,9 @@ class FamlyDownloader:
 
                 for img_dict in msg["images"]:
                     img = Image.from_dict(
-                        img_dict, date_override=date, text_override=text
+                        img_dict,
+                        date_override=date,
+                        text_override=text if self.text_comments else None,
                     )
 
                     click.echo(f" - image {img.img_id} from message at {img.date}")
