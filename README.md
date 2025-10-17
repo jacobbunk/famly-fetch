@@ -37,6 +37,15 @@ The `--stop-on-existing` option is helpful if you wish to download
 images continously and just want to download what is new since last
 download.
 
+### State management
+
+famly-fetch tracks downloaded images in a state file to avoid re-downloading them.
+By default, this state file is stored as `state.json` in your pictures folder.
+
+You can customize the state file location using the `--state-file` option.
+
+If you need to start over, simply delete (or move) the state file.
+
 ### Customizing Filenames
 
 You can customize the filename format using the `--filename-pattern` option.
@@ -99,6 +108,10 @@ Options:
                                   is automatically appended. Can be set via
                                   FAMLY_FILENAME_PATTERN env var  [default:
                                   %FP-%Y-%m-%d_%H-%M-%S-%ID]
+  --state-file FILE               Path to state file for tracking downloaded
+                                  images, can be set via FAMLY_STATE_FILE env
+                                  var  [default: (<pictures-
+                                  folder>/state.json)]
   --version                       Show the version and exit.
   --help                          Show this message and exit.
 ```
