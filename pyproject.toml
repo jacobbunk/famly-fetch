@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "famly-fetch"
-version = "0.2.1"
+version = "0.3.0"
 authors = [
     { name = "Jacob Bunk Nielsen" },
     { name = "Morten Siebuhr" },
