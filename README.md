@@ -37,6 +37,24 @@ The `--stop-on-existing` option is helpful if you wish to download
 images continously and just want to download what is new since last
 download.
 
+### Customizing Filenames
+
+You can customize the filename format using the `--filename-pattern` option.
+The pattern supports custom placeholders and standard strftime date/time formats.
+The file extension is automatically appended.
+
+**Custom placeholders:**
+
+- `%FP` - Filename prefix (e.g., child name, "note", "message", "journey")
+- `%ID` - Image ID
+
+**Date/time formats:**
+All standard strftime format codes are supported (e.g. `%Y`, `%m`, `%d` etc.)
+
+**Default pattern:** `%FP-%Y-%m-%d_%H-%M-%S-%ID`
+
+This produces filenames like: `child-name-2024-01-15_14-30-45-abc123.jpg`
+
 [Hent-billeder-fra-Famly.co.pdf](Hent-billeder-fra-Famly.co.pdf)
 contains instructions in Danish on how to make it work on a computer
 running Windows.
@@ -75,6 +93,12 @@ Options:
   --text-comments / --no-text-comments
                                   Add observation and message body text to
                                   image EXIF UserComment field
+  --filename-pattern PATTERN      Filename pattern. Custom patterns: %FP
+                                  (prefix), %ID (image ID). Supports strftime
+                                  formats (e.g., %Y, %m, %d). File extension
+                                  is automatically appended. Can be set via
+                                  FAMLY_FILENAME_PATTERN env var  [default:
+                                  %FP-%Y-%m-%d_%H-%M-%S-%ID]
   --version                       Show the version and exit.
   --help                          Show this message and exit.
 ```
