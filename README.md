@@ -82,10 +82,15 @@ Options:
                                   FAMLY_PASSWORD env var
   --access-token TOKEN            Your famly.co access token, can be set via
                                   FAMLY_ACCESS_TOKEN env var
+  --famly-base-url URL            Your famly.co instance baseurl (default:
+                                  https://app.famly.co), can be set via
+                                  FAMLY_BASE_URL env var
   --no-tagged                     Don't download tagged images
   -j, --journey                   Download images from child Learning Journey
   -n, --notes                     Download images from child notes
   -m, --messages                  Download images from messages
+  -l, --liked                     Download images which is liked by the
+                                  parents from all posts (in the feed)
   -p, --pictures-folder DIRECTORY
                                   Directory to save downloaded pictures, can
                                   be set via FAMLY_PICTURES_FOLDER env var
@@ -94,7 +99,7 @@ Options:
                                   file is encountered
   -u, --user-agent                User Agent used in Famly requests, can be
                                   set via FAMLY_USER_AGENT env var  [default:
-                                  famly-fetch/0.2.0]
+                                  famly-fetch/0.4.0]
   --latitude LAT                  Latitude for EXIF GPS data, can be set via
                                   LATITUDE env var
   --longitude LONG                Longitude for EXIF GPS data, can be set via

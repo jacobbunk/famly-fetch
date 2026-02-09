@@ -31,6 +31,7 @@ class FamlyDownloader:
         self,
         email: str,
         password: str,
+        famly_base_url: str,
         pictures_folder: Path,
         stop_on_existing: bool,
         text_comments: bool,
@@ -52,7 +53,9 @@ class FamlyDownloader:
         self.state_file = state_file
         self.downloaded_images = self.load_state()
 
-        self._apiClient = ApiClient(user_agent=user_agent, access_token=access_token)
+        self._apiClient = ApiClient(
+            base_url=famly_base_url, user_agent=user_agent, access_token=access_token
+        )
         if not access_token:
             self._apiClient.login(email, password)
 
@@ -87,6 +90,10 @@ class FamlyDownloader:
             all_children.append((child["childId"], child["name"]["firstName"]))
 
         return all_children
+
+    def get_parents_ids(self, child_id: str) -> set[str]:
+        relations = self._apiClient.get_relations(child_id)
+        return {x["loginId"] for x in relations if x["loginId"]}
 
     def download_images_from_notes(self, child_id, first_name):
         click.secho(
@@ -249,6 +256,59 @@ class FamlyDownloader:
                             return
                         else:
                             continue
+                    self.fetch_image(img, file_path)
+                    self.mark_as_downloaded(img.img_id)
+
+        self.save_state()
+
+    def download_images_from_feed(self, liked_by_ids: set[str]):
+        click.secho("Downloading liked images in posts...", fg="green")
+
+        cursor = None
+        older_than = None
+        while True:
+            click.echo("Fetching next 10 Posts")
+            response = self._apiClient.feed(
+                cursor=cursor, older_than=older_than, limit=10
+            )
+            if not response["feedItems"]:
+                break
+            last_item = response["feedItems"][-1]
+            cursor = last_item["feedItemId"]
+            older_than = last_item["createdDate"]
+            for feed_item in response["feedItems"]:
+                if not feed_item["originatorId"].startswith("Post:"):
+                    # not a Post item
+                    continue
+                create_date = feed_item["createdDate"]
+                for img_dict in feed_item["images"]:
+                    if not (
+                        img_dict["liked"]
+                        or [
+                            like
+                            for like in img_dict["likes"]
+                            if like["loginId"] in liked_by_ids
+                        ]
+                    ):
+                        # not liked by parents
+                        continue
+                    img = Image.from_dict(
+                        img_dict,
+                        date_override=create_date,
+                        text_override=feed_item["body"] if self.text_comments else None,
+                    )
+                    click.echo(f" - image {img.img_id} from post at {create_date}")
+
+                    if img.img_id in self.downloaded_images:
+                        click.secho(
+                            f"Image {img.img_id} already downloaded, {'stopping download' if self.stop_on_existing else 'skipping'}.",
+                            fg="yellow",
+                        )
+                        if self.stop_on_existing:
+                            return
+                        else:
+                            continue
+                    file_path = self.download_file_path(img, "post")
                     self.fetch_image(img, file_path)
                     self.mark_as_downloaded(img.img_id)
 

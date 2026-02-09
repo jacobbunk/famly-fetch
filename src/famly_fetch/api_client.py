@@ -24,9 +24,13 @@ def get_device_id() -> str:
 
 class ApiClient:
     _access_token = None
-    _base = "https://app.famly.co"
 
-    def __init__(self, user_agent: str | None = None, access_token: str | None = None):
+    def __init__(
+        self,
+        base_url: str,
+        user_agent: str | None = None,
+        access_token: str | None = None,
+    ):
         """
         Initialize the ApiClient.
 
@@ -37,6 +41,7 @@ class ApiClient:
         self._user_agent: str | None = user_agent
         self._device_id = get_device_id()
         self._access_token = access_token
+        self._base = base_url
 
     def login(self, email, password):
         """
@@ -159,6 +164,21 @@ class ApiClient:
             print("Error code: ", e.code)
             print("Response body: ", e.read())
 
+    def feed(
+        self,
+        cursor: str | None = None,
+        older_than: str | None = None,
+        limit: int | None = None,
+    ):
+        params = {}
+        if cursor:
+            params["cursor"] = cursor
+        if older_than:
+            params["olderThan"] = older_than
+        if limit:
+            params["first"] = limit
+        return self.make_api_request("GET", "/api/feed/feed/feed", params=params)
+
     def me_me_me(self):
         """
         Get information about the currently authenticated user.
@@ -172,3 +192,17 @@ class ApiClient:
         """
 
         return self.make_api_request("GET", "/api/me/me/me")
+
+    def get_relations(self, child_id: str) -> list[dict]:
+        """
+        Get the relations of a given child ID.
+
+        Args:
+            child_id (str): The ID of the child.
+
+        Returns:
+            list[dict]: A list of dictionary representing the relations.
+        """
+        return self.make_api_request(
+            "GET", "/api/v2/relations", params={"childId": child_id}
+        )

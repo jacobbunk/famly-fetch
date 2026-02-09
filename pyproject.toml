@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "famly-fetch"
-version = "0.3.0"
+version = "0.4.0"
 authors = [
     { name = "Jacob Bunk Nielsen" },
     { name = "Morten Siebuhr" },
-    { name = "iLeoDo" },
-    { name = "Tom Vincent" },    
+    { name = "Tianwei Dong", email = "iLeoDo@Gmail.com" },
+    { name = "Tom Vincent" },
 ]
 description = "Fetch your (kid's) images from famly.co"
 license-files = ["LICENSE"]

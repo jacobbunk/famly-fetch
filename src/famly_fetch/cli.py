@@ -36,12 +36,26 @@ def get_version():
     metavar="TOKEN",
     type=str,
 )
+@click.option(
+    "--famly-base-url",
+    envvar="FAMLY_BASE_URL",
+    help="Your famly.co instance baseurl (default: https://app.famly.co), can be set via FAMLY_BASE_URL env var",
+    metavar="URL",
+    default="https://app.famly.co",
+    type=str,
+)
 @click.option("--no-tagged", is_flag=True, help="Don't download tagged images")
 @click.option(
     "-j", "--journey", is_flag=True, help="Download images from child Learning Journey"
 )
 @click.option("-n", "--notes", is_flag=True, help="Download images from child notes")
 @click.option("-m", "--messages", is_flag=True, help="Download images from messages")
+@click.option(
+    "-l",
+    "--liked",
+    is_flag=True,
+    help="Download images which is liked by the parents from all posts (in the feed)",
+)
 @click.option(
     "-p",
     "--pictures-folder",
@@ -123,10 +137,12 @@ def main(
     email: str,
     password: str,
     access_token: str,
+    famly_base_url: str,
     no_tagged: bool,
     journey: bool,
     notes: bool,
     messages: bool,
+    liked: bool,
     pictures_folder: Path,
     stop_on_existing: bool,
     user_agent: str,
@@ -160,6 +176,7 @@ def main(
         famly_downloader = FamlyDownloader(
             email=email,
             password=password,
+            famly_base_url=famly_base_url,
             pictures_folder=pictures_folder,
             stop_on_existing=stop_on_existing,
             text_comments=text_comments,
@@ -175,7 +192,9 @@ def main(
             famly_downloader.download_images_from_messages()
 
         # Process each child
+        parent_ids = set()
         for child_id, first_name in famly_downloader.get_all_children():
+            parent_ids |= famly_downloader.get_parents_ids(child_id)
             if not no_tagged:
                 famly_downloader.download_tagged_images(child_id, first_name)
             if journey:
@@ -184,6 +203,10 @@ def main(
                 )
             if notes:
                 famly_downloader.download_images_from_notes(child_id, first_name)
+
+        if liked:
+            famly_downloader.download_images_from_feed(parent_ids)
+
     except Exception as e:
         click.secho(f"An exception occurred: {e}", fg="red")
 
