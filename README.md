@@ -11,6 +11,34 @@ Fetch your (kid's) images from famly.co
 code base. If you create PRs with improvements or bugfixes, please make sure
 to test them before submitting them.**
 
+## Local Development
+
+To run the project locally from source:
+
+```bash
+git clone https://github.com/ileodo/famly-fetch.git
+cd famly-fetch
+python -m venv .venv
+```
+
+Activate the virtual environment:
+
+- **Windows:** `.venv\Scripts\activate`
+- **Mac/Linux:** `source .venv/bin/activate`
+
+Then install the package in editable mode:
+
+```bash
+pip install -e .
+famly-fetch
+```
+
+To deactivate the virtual environment when done:
+
+```bash
+deactivate
+```
+
 ## Get Started
 
 ```
@@ -36,6 +64,16 @@ data of all downloaded images by providing latitude and longitude values.
 The `--stop-on-existing` option is helpful if you wish to download
 images continously and just want to download what is new since last
 download.
+
+### Downloading all feed images
+
+The `-f` / `--feed` flag downloads all images from all nursery feed posts, regardless of likes or tags:
+
+```bash
+famly-fetch -f
+```
+
+Images are organised into subdirectories named by the post date (e.g. `pictures/2026-02-19/`), so all photos from posts on the same day are grouped together.
 
 ### State management
 
@@ -120,6 +158,18 @@ Options:
   --version                       Show the version and exit.
   --help                          Show this message and exit.
 ```
+
+## Known Issues
+
+### Connection reset error
+
+When downloading a large number of images, you may see:
+
+```
+An exception occurred: <urlopen error [WinError 10054] An existing connection was forcibly closed by the remote host>
+```
+
+This is caused by the Famly server closing the connection after too many requests. Simply re-run the same command — already downloaded images are tracked in `state.json` and will be skipped, so the download will resume from where it left off.
 
 ## Docker
 
