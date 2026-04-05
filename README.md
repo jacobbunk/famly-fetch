@@ -64,10 +64,6 @@ All standard strftime format codes are supported (e.g. `%Y`, `%m`, `%d` etc.)
 
 This produces filenames like: `child-name-2024-01-15_14-30-45-abc123.jpg`
 
-[Hent-billeder-fra-Famly.co.pdf](Hent-billeder-fra-Famly.co.pdf)
-contains instructions in Danish on how to make it work on a computer
-running Windows.
-
 ## Command Line Help
 
 ```bash
