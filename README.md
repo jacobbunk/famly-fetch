@@ -75,6 +75,8 @@ famly-fetch -f
 
 Images are organised into subdirectories named by the post date (e.g. `pictures/2026-02-19/`), so all photos from posts on the same day are grouped together.
 
+> **Important privacy notice:** Using `-f` will download *all* images from the nursery feed, including photos of other children who are not your own. These images are shared by the nursery within a trusted setting. As a user of this tool you are solely responsible for handling these images with care — keep them private, do not share them further, and ensure they are stored securely. Delete any images of other children if you do not need them.
+
 ### State management
 
 famly-fetch tracks downloaded images in a state file to avoid re-downloading them.
