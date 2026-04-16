@@ -314,6 +314,55 @@ class FamlyDownloader:
 
         self.save_state()
 
+    def download_all_images_from_feed(self, batch_size=20, batch_pause=10):
+        click.secho("Downloading all images from feed posts...", fg="green")
+
+        cursor = None
+        older_than = None
+        batch_count = 0
+        while True:
+            click.echo("Fetching next 10 Posts")
+            response = self._apiClient.feed(
+                cursor=cursor, older_than=older_than, limit=10
+            )
+            if not response["feedItems"]:
+                break
+            last_item = response["feedItems"][-1]
+            cursor = last_item["feedItemId"]
+            older_than = last_item["createdDate"]
+            for feed_item in response["feedItems"]:
+                if not feed_item["originatorId"].startswith("Post:"):
+                    continue
+                create_date = feed_item["createdDate"]
+                for img_dict in feed_item["images"]:
+                    img = Image.from_dict(
+                        img_dict,
+                        date_override=create_date,
+                        text_override=feed_item["body"] if self.text_comments else None,
+                    )
+                    click.echo(f" - image {img.img_id} from post at {create_date}")
+
+                    if img.img_id in self.downloaded_images:
+                        click.secho(
+                            f"Image {img.img_id} already downloaded, {'stopping download' if self.stop_on_existing else 'skipping'}.",
+                            fg="yellow",
+                        )
+                        if self.stop_on_existing:
+                            return
+                        else:
+                            continue
+                    file_path = self.download_file_path(img, "post")
+                    self.fetch_image(img, file_path)
+                    self.mark_as_downloaded(img.img_id)
+                    self.save_state()
+                    batch_count += 1
+                    if batch_count % batch_size == 0:
+                        click.secho(
+                            f"Downloaded {batch_count} images, pausing {batch_pause}s...",
+                            fg="cyan",
+                        )
+                        time.sleep(batch_pause)
+
     def download_file_path(self, img: BaseImage, filename_prefix: str) -> Path:
         """Generate the file path for the downloaded image."""
 
@@ -327,7 +376,10 @@ class FamlyDownloader:
         filename = img.date.strftime(filename)
         filename = filename + file_ext
 
-        return Path(self._pictures_folder, filename)
+        date_dir = img.date.strftime("%Y-%m-%d")
+        dir_path = Path(self._pictures_folder, date_dir)
+        dir_path.mkdir(parents=True, exist_ok=True)
+        return Path(dir_path, filename)
 
     def fetch_image(self, img: BaseImage, file_path: Path):
         req = urllib.request.Request(url=img.url)
