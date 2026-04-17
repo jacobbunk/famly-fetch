@@ -135,7 +135,7 @@ Options:
                                   file is encountered
   -u, --user-agent                User Agent used in Famly requests, can be
                                   set via FAMLY_USER_AGENT env var  [default:
-                                  famly-fetch/0.4.0]
+                                  famly-fetch/<version>]
   --latitude LAT                  Latitude for EXIF GPS data, can be set via
                                   LATITUDE env var
   --longitude LONG                Longitude for EXIF GPS data, can be set via
