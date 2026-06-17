@@ -40,4 +40,9 @@ fragment Note on ChildNote {
     }
     width
   }
+  files {
+    fileId: id
+    url
+    filename: name
+  }
 }

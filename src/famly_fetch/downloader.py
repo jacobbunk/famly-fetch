@@ -23,7 +23,9 @@ import piexif
 import piexif.helper
 
 from famly_fetch.api_client import ApiClient
+from famly_fetch.file import File
 from famly_fetch.image import BaseImage, Image, SecretImage
+from famly_fetch.video import Video
 
 
 class FamlyDownloader:
@@ -41,6 +43,8 @@ class FamlyDownloader:
         latitude: float | None = None,
         longitude: float | None = None,
         filename_pattern: str = "%FP-%Y-%m-%d_%H-%M-%S-%ID",
+        include_files: bool = False,
+        include_videos: bool = False,
     ):
         self._pictures_folder: Path = pictures_folder
         self._pictures_folder.mkdir(parents=True, exist_ok=True)
@@ -51,6 +55,8 @@ class FamlyDownloader:
         self.text_comments = text_comments
         self.filename_pattern = filename_pattern
         self.state_file = state_file
+        self.include_files = include_files
+        self.include_videos = include_videos
         self.downloaded_images = self.load_state()
 
         self._apiClient = ApiClient(
@@ -133,6 +139,15 @@ class FamlyDownloader:
                     self.fetch_image(img, file_path)
                     self.mark_as_downloaded(img.img_id)
 
+                if self.include_files:
+                    if self._download_files_from_item(
+                        note.get("files") or [],
+                        date=date,
+                        text=text,
+                        filename_prefix=f"{first_name}-note",
+                    ):
+                        return
+
             next_ref = batch["next"]
 
             if not next_ref:
@@ -182,6 +197,24 @@ class FamlyDownloader:
                             continue
                     self.fetch_image(img, file_path)
                     self.mark_as_downloaded(img.img_id)
+
+                if self.include_files:
+                    if self._download_files_from_item(
+                        observation.get("files") or [],
+                        date=date,
+                        text=text,
+                        filename_prefix=f"{first_name}-journey",
+                    ):
+                        return
+
+                if self.include_videos:
+                    if self._download_videos_from_item(
+                        observation.get("videos") or [],
+                        date=date,
+                        text=text,
+                        filename_prefix=f"{first_name}-journey",
+                    ):
+                        return
 
             next_cursor = batch["next"]
 
@@ -235,7 +268,6 @@ class FamlyDownloader:
             for msg in reversed(conversation["messages"]):
                 text = msg["body"] + " - " + msg["author"]["title"]
                 date = msg["createdAt"]
-
                 for img_dict in msg["images"]:
                     img = Image.from_dict(
                         img_dict,
@@ -259,6 +291,14 @@ class FamlyDownloader:
                     self.fetch_image(img, file_path)
                     self.mark_as_downloaded(img.img_id)
 
+                if self.include_files:
+                    if self._download_files_from_item(
+                        msg.get("files") or [],
+                        date=date,
+                        text=text,
+                        filename_prefix="message",
+                    ):
+                        return
         self.save_state()
 
     def download_images_from_feed(self, liked_by_ids: set[str]):
@@ -312,6 +352,24 @@ class FamlyDownloader:
                     self.fetch_image(img, file_path)
                     self.mark_as_downloaded(img.img_id)
 
+                feed_text = feed_item.get("body") if self.text_comments else None
+                if self.include_files:
+                    if self._download_files_from_item(
+                        feed_item.get("files") or [],
+                        date=create_date,
+                        text=feed_text,
+                        filename_prefix="post",
+                    ):
+                        return
+                if self.include_videos:
+                    if self._download_videos_from_item(
+                        feed_item.get("videos") or [],
+                        date=create_date,
+                        text=feed_text,
+                        filename_prefix="post",
+                    ):
+                        return
+
         self.save_state()
 
     def download_all_images_from_feed(self, batch_size=20, batch_pause=10):
@@ -362,6 +420,164 @@ class FamlyDownloader:
                             fg="cyan",
                         )
                         time.sleep(batch_pause)
+
+                feed_text = feed_item.get("body") if self.text_comments else None
+                if self.include_files:
+                    if self._download_files_from_item(
+                        feed_item.get("files") or [],
+                        date=create_date,
+                        text=feed_text,
+                        filename_prefix="post",
+                    ):
+                        return
+                if self.include_videos:
+                    if self._download_videos_from_item(
+                        feed_item.get("videos") or [],
+                        date=create_date,
+                        text=feed_text,
+                        filename_prefix="post",
+                    ):
+                        return
+
+    def _download_files_from_item(
+        self,
+        file_dicts: list,
+        date: str,
+        text: str | None,
+        filename_prefix: str,
+    ) -> bool:
+        """Download every File attachment on a single note/observation/message.
+
+        Returns True if the caller should stop (only when stop_on_existing is
+        set and an already-downloaded file is encountered)."""
+        for file_dict in file_dicts:
+            f = File.from_dict(
+                file_dict,
+                date_override=date,
+                text_override=text if self.text_comments else None,
+            )
+            click.echo(f" - file {f.file_id} ({f.name or '?'}) at {f.date}")
+
+            if f.file_id in self.downloaded_images:
+                click.secho(
+                    f"File {f.file_id} already downloaded, "
+                    f"{'stopping download' if self.stop_on_existing else 'skipping'}.",
+                    fg="yellow",
+                )
+                if self.stop_on_existing:
+                    return True
+                continue
+
+            file_path = self.attachment_path(
+                attachment_id=f.file_id,
+                attachment_url=f.url,
+                date=f.date,
+                filename_prefix=filename_prefix,
+                original_name=f.name,
+            )
+            self.fetch_binary(f.url, file_path)
+            self.mark_as_downloaded(f.file_id)
+        return False
+
+    def _download_videos_from_item(
+        self,
+        video_dicts: list,
+        date: str,
+        text: str | None,
+        filename_prefix: str,
+    ) -> bool:
+        """Download every Video attachment on a single observation.
+
+        Returns True if the caller should stop (stop_on_existing semantics)."""
+        for video_dict in video_dicts:
+            try:
+                v = Video.from_dict(
+                    video_dict,
+                    date_override=date,
+                    text_override=text if self.text_comments else None,
+                )
+            except (KeyError, ValueError) as e:
+                click.secho(
+                    f"Skipping unrecognised video dict ({sorted(video_dict.keys())}): {e}",
+                    fg="yellow",
+                )
+                continue
+            if v is None:
+                click.secho(
+                    f"Skipping video {video_dict.get('videoId', '?')} — no playable URL yet.",
+                    fg="yellow",
+                )
+                continue
+
+            click.echo(f" - video {v.video_id} at {v.date}")
+
+            if v.video_id in self.downloaded_images:
+                click.secho(
+                    f"Video {v.video_id} already downloaded, "
+                    f"{'stopping download' if self.stop_on_existing else 'skipping'}.",
+                    fg="yellow",
+                )
+                if self.stop_on_existing:
+                    return True
+                continue
+
+            file_path = self.attachment_path(
+                attachment_id=v.video_id,
+                attachment_url=v.url,
+                date=v.date,
+                filename_prefix=filename_prefix,
+                original_name=None,
+            )
+            self.fetch_binary(v.url, file_path)
+            self.mark_as_downloaded(v.video_id)
+        return False
+
+    def attachment_path(
+        self,
+        attachment_id: str,
+        attachment_url: str,
+        date: datetime,
+        filename_prefix: str,
+        original_name: str | None,
+    ) -> Path:
+        """Pick a destination path for a non-image attachment (file or video).
+
+        Uses the original filename if available (sanitised, with date prefix
+        for sortability and id suffix to disambiguate); otherwise falls back
+        to the same filename pattern images use, with the extension derived
+        from the URL path."""
+        date_dir = date.strftime("%Y-%m-%d")
+        dir_path = Path(self._pictures_folder, date_dir)
+        dir_path.mkdir(parents=True, exist_ok=True)
+
+        if original_name:
+            safe = (
+                "".join(
+                    c if c.isalnum() or c in "-_." else "_" for c in original_name
+                ).strip("._")
+                or attachment_id
+            )
+            stem, ext = os.path.splitext(safe)
+            filename = (
+                f"{filename_prefix}-{date.strftime('%Y-%m-%d_%H-%M-%S')}"
+                f"-{attachment_id}-{stem}{ext}"
+            )
+        else:
+            ext = os.path.splitext(urlparse(attachment_url).path)[1].lower()
+            filename = self.filename_pattern
+            filename = filename.replace("%FP", filename_prefix)
+            filename = filename.replace("%ID", attachment_id)
+            filename = date.strftime(filename) + ext
+        return Path(dir_path, filename)
+
+    def fetch_binary(self, url: str, file_path: Path):
+        """Stream a URL to disk. Used for non-image attachments where EXIF
+        injection doesn't apply."""
+        req = urllib.request.Request(url=url)
+        with urllib.request.urlopen(req) as r, open(file_path, "wb") as f:
+            if r.status != 200:
+                raise Exception(f"Broken! {r.read().decode('utf-8')}")
+            shutil.copyfileobj(r, f)
 
     def download_file_path(self, img: BaseImage, filename_prefix: str) -> Path:
         """Generate the file path for the downloaded image."""

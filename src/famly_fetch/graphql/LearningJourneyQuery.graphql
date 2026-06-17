@@ -46,15 +46,20 @@ fragment ObservationDataWithNoComments on Observation {
   }
   videos {
     ... on TranscodingVideo {
-      id
+      videoId: id
     }
     ... on TranscodedVideo {
       duration
       height
-      id
+      videoId: id
       thumbnailUrl
       videoUrl
       width
     }
+  }
+  files {
+    fileId: id
+    url
+    filename: name
   }
 }
