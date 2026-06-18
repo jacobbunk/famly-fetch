@@ -39,6 +39,51 @@ To deactivate the virtual environment when done:
 deactivate
 ```
 
+## Running CI Locally
+
+The GitHub Actions workflow (`.github/workflows/ci.yml`) lints and format-checks
+the code across a matrix of Python versions (3.10, 3.11, 3.12, 3.13). You can
+reproduce that workflow on your own machine before pushing, using the
+`scripts/ci-local.sh` wrapper around [`act`](https://github.com/nektos/act).
+
+It runs the exact same steps as GitHub (checkout, set up Python, install
+dependencies, `ruff check`, `ruff format --diff`) inside Ubuntu containers, one
+per matrix entry, so any failure you see locally matches what CI will report.
+
+The workflow runs in a local Docker image built from `ci-local.Dockerfile`,
+which extends the standard `act` runner with Node.js (the stock image has no
+`node` on PATH, which the checkout and setup-python actions need). The wrapper
+builds this image automatically on first run.
+
+Requirements:
+
+- [`act`](https://github.com/nektos/act) (`brew install act` on macOS)
+- A running Docker daemon
+
+Usage:
+
+```bash
+# Run all four matrix builds (3.10-3.13) concurrently
+scripts/ci-local.sh
+
+# Run only the Python 3.11 build
+scripts/ci-local.sh -v 3.11
+
+# List the jobs without running them
+scripts/ci-local.sh -l
+
+# Rebuild the local runner image (e.g. after editing ci-local.Dockerfile)
+scripts/ci-local.sh -b
+
+# Pass extra flags straight through to act
+scripts/ci-local.sh -- --verbose
+```
+
+The first run builds the runner image, which can take a minute or two. On Apple
+silicon the script automatically requests the `linux/amd64` image so the
+containers match GitHub's runners. Run `scripts/ci-local.sh -h` for the full
+list of options.
+
 ## Get Started
 
 ```
@@ -86,6 +131,22 @@ You can customize the state file location using the `--state-file` option.
 
 If you need to start over, simply delete (or move) the state file.
 
+### Downloading non-image attachments and videos
+
+Use `--include-files` to download non-image file attachments (PDFs, documents, and similar files) from messages, notes, and learning journey entries:
+
+```bash
+famly-fetch --include-files
+```
+
+Use `--include-videos` to download videos from learning journey observations and feed posts:
+
+```bash
+famly-fetch --include-videos
+```
+
+Both flags can be combined with any other flags. They reuse the same `state.json` tracking and the same date-grouped folder layout as image downloads, so re-running will skip already-downloaded files. Non-image content is stored as-is without any EXIF metadata added.
+
 ### Customizing Filenames
 
 You can customize the filename format using the `--filename-pattern` option.
@@ -127,6 +188,13 @@ Options:
   -m, --messages                  Download images from messages
   -l, --liked                     Download images which is liked by the
                                   parents from all posts (in the feed)
+  -f, --feed                      Download all images from all posts (in the
+                                  feed)
+  --include-files                 Also download non-image file attachments
+                                  (PDFs, docs, etc.) from messages, notes, and
+                                  journeys
+  --include-videos                Also download videos from learning journey
+                                  observations and feed posts
   -p, --pictures-folder DIRECTORY
                                   Directory to save downloaded pictures, can
                                   be set via FAMLY_PICTURES_FOLDER env var

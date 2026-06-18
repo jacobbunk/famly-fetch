@@ -63,6 +63,16 @@ def get_version():
     help="Download all images from all posts (in the feed)",
 )
 @click.option(
+    "--include-files",
+    is_flag=True,
+    help="Also download non-image file attachments (PDFs, docs, etc.) from messages, notes, and journeys",
+)
+@click.option(
+    "--include-videos",
+    is_flag=True,
+    help="Also download videos from learning journey observations and feed posts",
+)
+@click.option(
     "-p",
     "--pictures-folder",
     envvar="FAMLY_PICTURES_FOLDER",
@@ -150,6 +160,8 @@ def main(
     messages: bool,
     liked: bool,
     feed: bool,
+    include_files: bool,
+    include_videos: bool,
     pictures_folder: Path,
     stop_on_existing: bool,
     user_agent: str,
@@ -193,6 +205,8 @@ def main(
             latitude=latitude,
             longitude=longitude,
             filename_pattern=filename_pattern,
+            include_files=include_files,
+            include_videos=include_videos,
         )
 
         if messages:

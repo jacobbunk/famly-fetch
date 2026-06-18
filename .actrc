@@ -1,0 +1,13 @@
+# Default image mapping for `act` in this repo.
+#
+# The stock catthehacker runner image has no `node` on PATH, which breaks the
+# JS actions (checkout, setup-python) and their post steps. We map
+# `ubuntu-latest` to a local image built from ci-local.Dockerfile that adds
+# Node.js 24.
+#
+# scripts/ci-local.sh builds this image automatically. To build it by hand for
+# direct `act` use:
+#   docker build -f ci-local.Dockerfile -t famly-fetch-act-runner:latest .
+-P ubuntu-latest=famly-fetch-act-runner:latest
+# The image is local-only; do not try to force-pull it from a registry.
+--pull=false
